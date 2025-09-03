@@ -15,9 +15,9 @@ define( 'POLITEIA_HL_PATH', plugin_dir_path( __FILE__ ) );
 define( 'POLITEIA_HL_URL', plugin_dir_url( __FILE__ ) );
 
 // ===== Includes =====
-require_once POLITEIA_HL_PATH . 'includes/class-politeia-hl-schema.php';
-require_once POLITEIA_HL_PATH . 'includes/class-politeia-hl-rest.php';
-require_once POLITEIA_HL_PATH . 'includes/class-politeia-hl-render.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-schema.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-rest.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-render.php';
 
 // ===== Activación =====
 function politeia_hl_activate() {
