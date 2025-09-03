@@ -1,0 +1,49 @@
+/* Badge pequeño al lado del mark cuando hay nota */
+.hl-note-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 4px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.2);
+    background: #111;
+    cursor: pointer;
+    vertical-align: middle;
+    transform: translateY(-1px);
+  }
+  
+  /* Popover de nota */
+  #politeia-hl-note-popover {
+    position: absolute;
+    display: none;
+    z-index: 100000;
+  }
+  #politeia-hl-note-popover .note-content {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 12px;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  #politeia-hl-note-popover .note-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 10px;
+  }
+  #politeia-hl-note-popover .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  #politeia-hl-note-popover .actions button {
+    border: 0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    background: #111;
+    color: #fff;
+  }
+  
