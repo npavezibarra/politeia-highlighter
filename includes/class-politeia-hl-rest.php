@@ -154,16 +154,15 @@ class Politeia_HL_REST {
 
 		$table = Politeia_HL_Schema::table_name();
 
-		/* phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table proviene del schema (determinístico con $wpdb->prefix), no es input del usuario. */
+		// Query segura: nombre de tabla por concatenación, valores con placeholders.
+		$sql  = 'SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at ';
+		$sql .= 'FROM ' . $table . ' ';
+		$sql .= 'WHERE user_id = %d AND post_id = %d ';
+		$sql .= 'ORDER BY id DESC';
+
 		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at
-				 FROM {$table}
-				 WHERE user_id = %d AND post_id = %d
-				 ORDER BY id DESC",
-				$user_id,
-				$post_id
-			),
+			/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Primer argumento es $wpdb->prepare() con placeholders; el nombre de tabla se concatena de forma determinística. */
+			$wpdb->prepare( $sql, $user_id, $post_id ),
 			ARRAY_A
 		);
 
@@ -178,12 +177,11 @@ class Politeia_HL_REST {
 		$table   = Politeia_HL_Schema::table_name();
 
 		// Verifica propiedad.
-		/* phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Nombre de tabla determinístico desde el schema; solo valores usan placeholders. */
+		$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
+
 		$owner = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT user_id FROM {$table} WHERE id = %d",
-				$id
-			)
+			/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Primer argumento es $wpdb->prepare() con placeholders; el nombre de tabla se concatena de forma determinística. */
+			$wpdb->prepare( $owner_sql, $id )
 		);
 
 		if ( ! $owner ) {
