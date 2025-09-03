@@ -4,8 +4,8 @@ if ( ! defined('ABSPATH') ) exit;
 class Politeia_HL_Render {
 
     public function __construct() {
-        add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
-        add_filter('the_content',        [$this, 'append_container']);
+        add_action('wp_enqueue_scripts', [ $this, 'enqueue_assets' ]);
+        add_filter('the_content', [ $this, 'append_container' ]);
     }
 
     public function enqueue_assets() {
@@ -34,7 +34,7 @@ class Politeia_HL_Render {
             'rest_url'    => rest_url('politeia/v1/highlights'),
             'nonce'       => wp_create_nonce('wp_rest'),
             'currentUser' => get_current_user_id(),
-            'colors'      => ['#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0'],
+            'colors'      => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
         ]);
     }
 

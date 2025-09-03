@@ -6,60 +6,58 @@ class Politeia_HL_REST {
     const NS = 'politeia/v1';
 
     public function __construct() {
-        add_action('rest_api_init', [$this, 'register_routes']);
+        add_action('rest_api_init', [ $this, 'register_routes' ]);
     }
 
     public function register_routes() {
         register_rest_route(self::NS, '/highlights', [
             [
                 'methods'             => WP_REST_Server::CREATABLE, // POST
-                'callback'            => [$this, 'create_highlight'],
-                'permission_callback' => [$this, 'auth_required'],
+                'callback'            => [ $this, 'create_highlight' ],
+                'permission_callback' => [ $this, 'auth_required' ],
                 'args'                => [
-                    'post_id'       => ['type' => 'integer', 'required' => true],
-                    'anchor_exact'  => ['type' => 'string',  'required' => true],
-                    'anchor_prefix' => ['type' => 'string',  'required' => false, 'default' => ''],
-                    'anchor_suffix' => ['type' => 'string',  'required' => false, 'default' => ''],
-                    'color'         => ['type' => 'string',  'required' => false, 'default' => '#ffe066'],
-                    'note'          => ['type' => 'string',  'required' => false, 'default' => ''],
+                    'post_id'       => [ 'type' => 'integer', 'required' => true ],
+                    'anchor_exact'  => [ 'type' => 'string',  'required' => true ],
+                    'anchor_prefix' => [ 'type' => 'string',  'required' => false, 'default' => '' ],
+                    'anchor_suffix' => [ 'type' => 'string',  'required' => false, 'default' => '' ],
+                    'color'         => [ 'type' => 'string',  'required' => false, 'default' => '#ffe066' ],
+                    'note'          => [ 'type' => 'string',  'required' => false, 'default' => '' ],
                 ],
             ],
             [
                 'methods'             => WP_REST_Server::READABLE, // GET
-                'callback'            => [$this, 'list_highlights'],
-                'permission_callback' => [$this, 'auth_required'],
+                'callback'            => [ $this, 'list_highlights' ],
+                'permission_callback' => [ $this, 'auth_required' ],
                 'args'                => [
-                    'post_id' => ['type' => 'integer', 'required' => true],
+                    'post_id' => [ 'type' => 'integer', 'required' => true ],
                 ],
             ],
         ]);
 
         register_rest_route(self::NS, '/highlights/(?P<id>\d+)', [
             'methods'             => WP_REST_Server::DELETABLE, // DELETE
-            'callback'            => [$this, 'delete_highlight'],
-            'permission_callback' => [$this, 'auth_required'],
+            'callback'            => [ $this, 'delete_highlight' ],
+            'permission_callback' => [ $this, 'auth_required' ],
             'args'                => [
-                'id' => ['type' => 'integer', 'required' => true],
+                'id' => [ 'type' => 'integer', 'required' => true ],
             ],
         ]);
     }
 
     /** -------- Helpers -------- */
-
     public function auth_required(WP_REST_Request $request) {
         if ( ! is_user_logged_in() ) {
-            return new WP_Error('rest_forbidden', 'Debes iniciar sesión.', ['status' => 401]);
+            return new WP_Error('rest_forbidden', 'Debes iniciar sesión.', [ 'status' => 401 ]);
         }
         // Verificación de nonce REST (el frontend enviará X-WP-Nonce)
         $nonce = $request->get_header('x-wp-nonce');
         if ( ! $nonce || ! wp_verify_nonce($nonce, 'wp_rest') ) {
-            return new WP_Error('rest_invalid_nonce', 'Nonce inválido.', ['status' => 403]);
+            return new WP_Error('rest_invalid_nonce', 'Nonce inválido.', [ 'status' => 403 ]);
         }
         return current_user_can('read');
     }
 
     /** -------- Handlers -------- */
-
     public function create_highlight(WP_REST_Request $request) {
         if ( ! function_exists('sanitize_text_field') ) require_once ABSPATH . 'wp-includes/formatting.php';
         global $wpdb;
@@ -79,7 +77,7 @@ class Politeia_HL_REST {
         $color         = mb_substr($color, 0, 16);
 
         if ( empty($anchor_exact) || empty($post_id) ) {
-            return new WP_Error('rest_invalid', 'Faltan datos requeridos.', ['status' => 400]);
+            return new WP_Error('rest_invalid', 'Faltan datos requeridos.', [ 'status' => 400 ]);
         }
 
         $table = Politeia_HL_Schema::table_name();
@@ -97,11 +95,11 @@ class Politeia_HL_REST {
                 'created_at'    => current_time('mysql'),
                 'updated_at'    => current_time('mysql'),
             ],
-            ['%d','%d','%s','%s','%s','%s','%s','%s','%s']
+            [ '%d','%d','%s','%s','%s','%s','%s','%s','%s' ]
         );
 
         if ( false === $inserted ) {
-            return new WP_Error('db_insert_error', 'No se pudo guardar el highlight.', ['status' => 500]);
+            return new WP_Error('db_insert_error', 'No se pudo guardar el highlight.', [ 'status' => 500 ]);
         }
 
         $id = (int) $wpdb->insert_id;
@@ -126,7 +124,7 @@ class Politeia_HL_REST {
         $post_id = (int) $request->get_param('post_id');
 
         if ( empty($post_id) ) {
-            return new WP_Error('rest_invalid', 'post_id es requerido.', ['status' => 400]);
+            return new WP_Error('rest_invalid', 'post_id es requerido.', [ 'status' => 400 ]);
         }
 
         $table = Politeia_HL_Schema::table_name();
@@ -156,15 +154,15 @@ class Politeia_HL_REST {
             $wpdb->prepare("SELECT user_id FROM {$table} WHERE id = %d", $id)
         );
         if ( ! $owner ) {
-            return new WP_Error('rest_not_found', 'No existe.', ['status' => 404]);
+            return new WP_Error('rest_not_found', 'No existe.', [ 'status' => 404 ]);
         }
         if ( (int) $owner !== (int) $user_id ) {
-            return new WP_Error('rest_forbidden', 'No puedes borrar este highlight.', ['status' => 403]);
+            return new WP_Error('rest_forbidden', 'No puedes borrar este highlight.', [ 'status' => 403 ]);
         }
 
-        $deleted = $wpdb->delete($table, ['id' => $id], ['%d']);
+        $deleted = $wpdb->delete($table, [ 'id' => $id ], [ '%d' ]);
         if ( false === $deleted ) {
-            return new WP_Error('db_delete_error', 'No se pudo borrar.', ['status' => 500]);
+            return new WP_Error('db_delete_error', 'No se pudo borrar.', [ 'status' => 500 ]);
         }
 
         return new WP_REST_Response(null, 204);
