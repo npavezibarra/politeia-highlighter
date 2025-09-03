@@ -1,0 +1,24 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# PHP Composer
+vendor/
+composer.lock
+
+# WordPress local env
+.wp-env/
+wordpress/
+wp-content/uploads/
+.env
+
+# Build
+dist/
