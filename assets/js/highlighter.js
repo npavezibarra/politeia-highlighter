@@ -6,6 +6,7 @@
   const API = { base: politeiaHL.rest_url, nonce: politeiaHL.nonce };
   const notesById = new Map();
   let lastMouse = { x: 0, y: 0 }; // viewport coords
+  let lastSelectionRange = null; // persists user selection even if focus moves
 
   // ---------- Helpers ----------
   const byId = (id) => document.getElementById(id);
@@ -200,6 +201,7 @@
       const ta = byId('politeia-hl-note'); if (ta) ta.value = '';
       bar.querySelectorAll('.hl-swatch.active').forEach(el => el.classList.remove('active'));
     }
+    lastSelectionRange = null;
   }
 
   function currentColor() {
@@ -240,52 +242,96 @@
   }
   const normalizeSpaces = (s) => (s || '').replace(/\s+/g, ' ').trim();
 
-  function findBestMatch(exact, prefix, suffix, scopeEl) {
-    exact = normalizeSpaces(exact);
-    const pfx = normalizeSpaces(prefix);
-    const sfx = normalizeSpaces(suffix);
-    if (!exact) return null;
+    function findBestMatch(exact, prefix, suffix, scopeEl) {
+      exact = normalizeSpaces(exact);
+      const pfx = normalizeSpaces(prefix);
+      const sfx = normalizeSpaces(suffix);
+      if (!exact) return null;
 
-    let best = null;
-    for (const tn of textNodesUnder(scopeEl || document.body)) {
-      const raw = tn.nodeValue;
-      if (!raw || !raw.trim()) continue;
+      const scope = scopeEl || document.body;
+      let best = null;
+      for (const tn of textNodesUnder(scope)) {
+        const raw = tn.nodeValue;
+        if (!raw || !raw.trim()) continue;
 
-      let from = 0;
-      while (true) {
-        const idx = raw.indexOf(exact, from);
-        if (idx === -1) break;
+        let from = 0;
+        while (true) {
+          const idx = raw.indexOf(exact, from);
+          if (idx === -1) break;
 
-        const LEFT = raw.slice(Math.max(0, idx - 220), idx);
-        const RIGHT = raw.slice(idx + exact.length, idx + exact.length + 220);
+          const LEFT = raw.slice(Math.max(0, idx - 220), idx);
+          const RIGHT = raw.slice(idx + exact.length, idx + exact.length + 220);
 
-        let score = 0;
-        if (pfx) score += similarityTail(LEFT, pfx);
-        if (sfx) score += similarityHead(RIGHT, sfx);
+          let score = 0;
+          if (pfx) score += similarityTail(LEFT, pfx);
+          if (sfx) score += similarityHead(RIGHT, sfx);
 
-        const parentEl = tn.parentElement;
-        if (parentEl && parentEl.closest('#politeia-hl-toolbar, #politeia-hl-note-popover')) score -= 100;
+          const parentEl = tn.parentElement;
+          if (parentEl && parentEl.closest('#politeia-hl-toolbar, #politeia-hl-note-popover')) score -= 100;
 
-        if (!best || score > best.score) best = { node: tn, start: idx, end: idx + exact.length, score };
-        from = idx + exact.length;
+          if (!best || score > best.score) best = { node: tn, start: idx, end: idx + exact.length, score };
+          from = idx + exact.length;
+        }
       }
+      if (best) return best;
+
+      // Fallback: allow matches spanning multiple text nodes.
+      const joined = normalizeSpaces(scope.innerText || scope.textContent || '');
+      const idx = joined.indexOf(exact);
+      if (idx === -1) return null;
+
+      let offset = 0;
+      let startNode = null; let endNode = null; let start = 0; let end = 0;
+      for (const tn of textNodesUnder(scope)) {
+        const len = tn.nodeValue.length;
+        if (!startNode && idx < offset + len) {
+          startNode = tn;
+          start = idx - offset;
+        }
+        if (!endNode && idx + exact.length <= offset + len) {
+          endNode = tn;
+          end = idx + exact.length - offset;
+          break;
+        }
+        offset += len;
+      }
+      if (!startNode || !endNode) return null;
+      return { node: startNode, start, endNode, end, score: 0 };
     }
-    return best;
-  }
   function similarityTail(a, b) { a = normalizeSpaces(a); b = normalizeSpaces(b); const len = Math.min(a.length, b.length, 60); if (!len) return 0; let same = 0; for (let i = 1; i <= len; i++) { if (a[a.length - i] === b[b.length - i]) same++; else break; } return same; }
   function similarityHead(a, b) { a = normalizeSpaces(a); b = normalizeSpaces(b); const len = Math.min(a.length, b.length, 60); if (!len) return 0; let same = 0; for (let i = 0; i < len; i++) { if (a[i] === b[i]) same++; else break; } return same; }
+
+  function wrapRange(range, color, id, note) {
+    if (!range) return null;
+    const r = range.cloneRange();
+    const mark = document.createElement('mark');
+    mark.className = 'politeia-hl-mark';
+    mark.style.background = color || (politeiaHL.colors ? politeiaHL.colors[0] : '#ffe066');
+    if (id != null) mark.setAttribute('data-hl-id', String(id));
+    try {
+      r.surroundContents(mark);
+    } catch (err) {
+      return null;
+    }
+    if (note && String(note).trim()) injectNoteBadge(mark, note);
+    return mark;
+  }
 
   function wrapMatch(best, color, id, note) {
     if (!best || !best.node) return null;
     const r = document.createRange();
     r.setStart(best.node, best.start);
-    r.setEnd(best.node, best.end);
+    r.setEnd(best.endNode || best.node, best.end);
 
     const mark = document.createElement('mark');
     mark.className = 'politeia-hl-mark';
     mark.style.background = color || (politeiaHL.colors ? politeiaHL.colors[0] : '#ffe066');
     if (id != null) mark.setAttribute('data-hl-id', String(id));
-    r.surroundContents(mark);
+    try {
+      r.surroundContents(mark);
+    } catch (err) {
+      return null;
+    }
 
     if (note && String(note).trim()) injectNoteBadge(mark, note);
     return mark;
@@ -329,17 +375,18 @@
   // ---------- Selection UX ----------
   function bindSelection() {
     // Show/hide on mouseup
-    document.addEventListener('mouseup', (e) => {
-      if (e.target && e.target.closest('#politeia-hl-toolbar')) return;
-      const s = window.getSelection();
-      const txt = s ? s.toString().trim() : '';
-      if (txt) {
-        // Prefer near selection; fallback near mouse
-        if (!showToolbarNearSelection()) showToolbarAtMouse();
-      } else {
-        hideToolbar();
-      }
-    });
+      document.addEventListener('mouseup', (e) => {
+        if (e.target && e.target.closest('#politeia-hl-toolbar')) return;
+        const s = window.getSelection();
+        const txt = s ? s.toString().trim() : '';
+        if (txt) {
+          lastSelectionRange = s.getRangeAt(0).cloneRange();
+          // Prefer near selection; fallback near mouse
+          if (!showToolbarNearSelection()) showToolbarAtMouse();
+        } else {
+          hideToolbar();
+        }
+      });
 
     // Swatches
     document.addEventListener('click', (e) => {
@@ -352,12 +399,11 @@
     // Save / Cancel
     document.addEventListener('click', async (e) => {
       if (e.target && e.target.id === 'politeia-hl-save') {
-        const sel = window.getSelection();
+        const sel = lastSelectionRange;
         const text = sel ? sel.toString().trim() : '';
         if (!text) { hideToolbar(); return; }
 
-        const selector = (function buildSelectorFromSelection() {
-          const range = sel.getRangeAt(0);
+        const selector = (function buildSelectorFromRange(range) {
           const container = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
           const block = container.closest ? (container.closest('p,div,article,section,main') || document.body) : document.body;
           const full = (block.innerText || block.textContent || '').replace(/\s+/g, ' ');
@@ -368,7 +414,7 @@
             anchor_suffix = full.slice(idx + text.length, idx + text.length + 200);
           }
           return { exact: text, anchor_prefix, anchor_suffix };
-        })();
+        })(sel);
 
         const note = (byId('politeia-hl-note')?.value || '').slice(0, 1000);
         const payload = {
@@ -383,10 +429,11 @@
         try {
           const created = await apiCreateHighlight(payload);
           notesById.set(Number(created.id), note || '');
-          const scope = document.querySelector('article, .entry-content, main') || document.body;
-          const best = findBestMatch(payload.anchor_exact, payload.anchor_prefix, payload.anchor_suffix, scope);
-          const mark = wrapMatch(best, payload.color, created.id, note);
-          if (!mark) wrapMatch(findBestMatch(payload.anchor_exact, '', '', document.body), payload.color, created.id, note);
+          const mark = wrapRange(sel, payload.color, created.id, note);
+          if (!mark) {
+            const scope = document.querySelector('article, .entry-content, main') || document.body;
+            wrapMatch(findBestMatch(payload.anchor_exact, payload.anchor_prefix, payload.anchor_suffix, scope), payload.color, created.id, note);
+          }
         } catch (err) {
           console.error(err);
           alert('No se pudo guardar el highlight.');
