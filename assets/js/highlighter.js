@@ -123,7 +123,7 @@
       <textarea id="politeia-hl-note" placeholder="${politeiaHL.strings.notePlaceholder}" style="min-width:260px; min-height:60px;"></textarea>
       <div style="display:flex; gap:8px; align-items:center;">
         <button id="politeia-hl-save">${politeiaHL.strings.save}</button>
-        <button id="politeia-hl-cancel" class="muted">${politeiaHL.strings.cancel}</button>
+        <button id="politeia-hl-cancel">${politeiaHL.strings.cancel}</button>
       </div>
     `;
     document.body.appendChild(bar);
