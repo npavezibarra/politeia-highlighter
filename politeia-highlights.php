@@ -1,15 +1,15 @@
 <?php
 /**
  * Plugin Name: Politeia Highlights
- * Description: Permite a los usuarios resaltar texto en los posts y guardar sus highlights.
+ * Description: Allows users to highlight text in posts and save their notes.
  * Version: 0.1.0
  * Author: Politeia
  * Text Domain: politeia-highlights
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Evita acceso directo
+if ( ! defined( 'ABSPATH' ) ) exit; // Prevent direct access
 
-// ===== Constantes =====
+// ===== Constants =====
 define( 'POLITEIA_HL_VERSION', '0.1.0' );
 define( 'POLITEIA_HL_PATH', plugin_dir_path( __FILE__ ) );
 define( 'POLITEIA_HL_URL', plugin_dir_url( __FILE__ ) );
@@ -19,8 +19,9 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-schema.ph
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-rest.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-render.php';
 
-// ===== Activación =====
+// ===== Activation =====
 function politeia_hl_activate() {
+    // Create database table on plugin activation
     require_once POLITEIA_HL_PATH . 'includes/class-politeia-hl-schema.php';
     Politeia_HL_Schema::create_table();
 }
@@ -28,6 +29,7 @@ register_activation_hook( __FILE__, 'politeia_hl_activate' );
 
 // ===== Init =====
 function politeia_hl_init() {
+    // Register REST routes and front-end renderer
     new Politeia_HL_REST();
     new Politeia_HL_Render();
 }
