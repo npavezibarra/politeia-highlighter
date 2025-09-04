@@ -3,13 +3,20 @@ if ( ! defined('ABSPATH') ) exit;
 
 class Politeia_HL_Schema {
 
-    const TABLE = 'wp_user_highlights'; // usa $wpdb->prefix en runtime
+    // Base table name; $wpdb->prefix is added at runtime
+    const TABLE = 'wp_user_highlights';
 
+    /**
+     * Return full table name with WordPress prefix.
+     */
     public static function table_name() {
         global $wpdb;
         return $wpdb->prefix . 'user_highlights';
     }
 
+    /**
+     * Create database table to store highlights.
+     */
     public static function create_table() {
         global $wpdb;
 
@@ -36,7 +43,7 @@ class Politeia_HL_Schema {
 
         dbDelta( $sql );
 
-        // Guarda versión para futuras migraciones
+        // Store version for future migrations
         add_option('politeia_hl_db_version', POLITEIA_HL_VERSION);
     }
 }

@@ -60,155 +60,160 @@ class Politeia_HL_REST {
 		);
 	}
 
-	/** -------- Helpers -------- */
+        /** -------- Helpers -------- */
 	public function auth_required( WP_REST_Request $request ) {
 		if ( ! is_user_logged_in() ) {
-			return new WP_Error( 'rest_forbidden', 'Debes iniciar sesión.', [ 'status' => 401 ] );
+				return new WP_Error( 'rest_forbidden', __( 'You must be logged in.', 'politeia-highlights' ), [ 'status' => 401 ] );
 		}
 
-		// Verificación de nonce REST (el frontend enviará X-WP-Nonce).
-		$nonce = $request->get_header( 'x-wp-nonce' );
+			// REST nonce verification (frontend sends X-WP-Nonce)
+			$nonce = $request->get_header( 'x-wp-nonce' );
 		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error( 'rest_invalid_nonce', 'Nonce inválido.', [ 'status' => 403 ] );
+				return new WP_Error( 'rest_invalid_nonce', __( 'Invalid nonce.', 'politeia-highlights' ), [ 'status' => 403 ] );
 		}
 
-		return current_user_can( 'read' );
+			return current_user_can( 'read' );
 	}
 
-	/** -------- Handlers -------- */
+        /** -------- Handlers -------- */
 	public function create_highlight( WP_REST_Request $request ) {
 		if ( ! function_exists( 'sanitize_text_field' ) ) {
-			require_once ABSPATH . 'wp-includes/formatting.php';
+				require_once ABSPATH . 'wp-includes/formatting.php';
 		}
 
-		global $wpdb;
+			global $wpdb;
 
-		$user_id = get_current_user_id();
-		$post_id = (int) $request->get_param( 'post_id' );
+			$user_id = get_current_user_id();
+			$post_id = (int) $request->get_param( 'post_id' );
 
-		$anchor_exact  = wp_unslash( (string) $request->get_param( 'anchor_exact' ) );
-		$anchor_prefix = wp_unslash( (string) $request->get_param( 'anchor_prefix' ) );
-		$anchor_suffix = wp_unslash( (string) $request->get_param( 'anchor_suffix' ) );
-		$color         = sanitize_text_field( (string) $request->get_param( 'color' ) );
-                $note          = sanitize_textarea_field( wp_unslash( (string) $request->get_param( 'note' ) ) );
+			$anchor_exact  = wp_unslash( (string) $request->get_param( 'anchor_exact' ) );
+			$anchor_prefix = wp_unslash( (string) $request->get_param( 'anchor_prefix' ) );
+			$anchor_suffix = wp_unslash( (string) $request->get_param( 'anchor_suffix' ) );
+			$color         = sanitize_text_field( (string) $request->get_param( 'color' ) );
+			$note          = sanitize_textarea_field( wp_unslash( (string) $request->get_param( 'note' ) ) );
 
-		// Límites razonables.
-		$anchor_prefix = mb_substr( $anchor_prefix, 0, 255 );
-		$anchor_suffix = mb_substr( $anchor_suffix, 0, 255 );
-		$color         = mb_substr( $color, 0, 16 );
-		$note          = mb_substr( $note, 0, 10000 ); // por si acaso
+			// Reasonable limits
+			$anchor_prefix = mb_substr( $anchor_prefix, 0, 255 );
+			$anchor_suffix = mb_substr( $anchor_suffix, 0, 255 );
+			$color         = mb_substr( $color, 0, 16 );
+			$note          = mb_substr( $note, 0, 10000 ); // just in case
 
 		if ( empty( $anchor_exact ) || empty( $post_id ) ) {
-			return new WP_Error( 'rest_invalid', 'Faltan datos requeridos.', [ 'status' => 400 ] );
+				return new WP_Error( 'rest_invalid', __( 'Missing required data.', 'politeia-highlights' ), [ 'status' => 400 ] );
 		}
 
-		$table = Politeia_HL_Schema::table_name();
+			$table = Politeia_HL_Schema::table_name();
 
-		$inserted = $wpdb->insert(
-			$table,
-			[
-				'user_id'       => $user_id,
-				'post_id'       => $post_id,
-				'anchor_exact'  => $anchor_exact,
-				'anchor_prefix' => $anchor_prefix,
-				'anchor_suffix' => $anchor_suffix,
-				'color'         => $color ? $color : '#ffe066',
-				'note'          => $note,
-				'created_at'    => current_time( 'mysql' ),
-				'updated_at'    => current_time( 'mysql' ),
-			],
-			[ '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s' ]
-		);
+			$inserted = $wpdb->insert(
+					$table,
+					[
+						'user_id'       => $user_id,
+						'post_id'       => $post_id,
+						'anchor_exact'  => $anchor_exact,
+						'anchor_prefix' => $anchor_prefix,
+						'anchor_suffix' => $anchor_suffix,
+						'color'         => $color ? $color : '#ffe066',
+						'note'          => $note,
+						'created_at'    => current_time( 'mysql' ),
+						'updated_at'    => current_time( 'mysql' ),
+					],
+					[ '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s' ]
+			);
 
 		if ( false === $inserted ) {
-			// Log para desarrollo (WP_DEBUG_LOG debe estar habilitado).
-			error_log( '[Politeia HL] Insert error: ' . $wpdb->last_error . ' | SQL: ' . $wpdb->last_query );
-			// Devuelve razón para depurar en entorno local.
-			return new WP_Error(
-				'db_insert_error',
-				'No se pudo guardar el highlight.',
-				[
-					'status'   => 500,
-					'db_error' => $wpdb->last_error,
-				]
-			);
+                                // Log for development (WP_DEBUG_LOG must be enabled)
+                                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+                                error_log( '[Politeia HL] Insert error: ' . $wpdb->last_error . ' | SQL: ' . $wpdb->last_query );
+				// Return reason to debug locally
+				return new WP_Error(
+						'db_insert_error',
+						__( 'Could not save highlight.', 'politeia-highlights' ),
+						[
+							'status'   => 500,
+							'db_error' => $wpdb->last_error,
+						]
+				);
 		}
 
-		$id = (int) $wpdb->insert_id;
+			$id = (int) $wpdb->insert_id;
 
-		return new WP_REST_Response(
-			[
-				'id'            => $id,
-				'user_id'       => $user_id,
-				'post_id'       => $post_id,
-				'anchor_exact'  => $anchor_exact,
-				'anchor_prefix' => $anchor_prefix,
-				'anchor_suffix' => $anchor_suffix,
-				'color'         => $color ? $color : '#ffe066',
-				'note'          => $note,
-				'created_at'    => current_time( 'mysql' ),
-				'updated_at'    => current_time( 'mysql' ),
-			],
-			201
-		);
+			return new WP_REST_Response(
+					[
+						'id'            => $id,
+						'user_id'       => $user_id,
+						'post_id'       => $post_id,
+						'anchor_exact'  => $anchor_exact,
+						'anchor_prefix' => $anchor_prefix,
+						'anchor_suffix' => $anchor_suffix,
+						'color'         => $color ? $color : '#ffe066',
+						'note'          => $note,
+						'created_at'    => current_time( 'mysql' ),
+						'updated_at'    => current_time( 'mysql' ),
+					],
+					201
+			);
 	}
 
 	public function list_highlights( WP_REST_Request $request ) {
-		global $wpdb;
+			global $wpdb;
 
-		$user_id = get_current_user_id();
-		$post_id = (int) $request->get_param( 'post_id' );
+			$user_id = get_current_user_id();
+			$post_id = (int) $request->get_param( 'post_id' );
 
 		if ( empty( $post_id ) ) {
-			return new WP_Error( 'rest_invalid', 'post_id es requerido.', [ 'status' => 400 ] );
+				return new WP_Error( 'rest_invalid', __( 'post_id is required.', 'politeia-highlights' ), [ 'status' => 400 ] );
 		}
 
-		$table = Politeia_HL_Schema::table_name();
+			$table = Politeia_HL_Schema::table_name();
 
-		// Query segura: nombre de tabla por concatenación, valores con placeholders.
-		$sql  = 'SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at ';
-		$sql .= 'FROM ' . $table . ' ';
-		$sql .= 'WHERE user_id = %d AND post_id = %d ';
-		$sql .= 'ORDER BY id DESC';
+			// Safe query: table name by concatenation, values with placeholders
+			$sql  = 'SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at ';
+			$sql .= 'FROM ' . $table . ' ';
+			$sql .= 'WHERE user_id = %d AND post_id = %d ';
+			$sql .= 'ORDER BY id DESC';
 
-		$rows = $wpdb->get_results(
-			/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Primer argumento es $wpdb->prepare() con placeholders; el nombre de tabla se concatena de forma determinística. */
-			$wpdb->prepare( $sql, $user_id, $post_id ),
-			ARRAY_A
-		);
+			$rows = $wpdb->get_results(
+					/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+					$wpdb->prepare( $sql, $user_id, $post_id ),
+					ARRAY_A
+			);
 
-		return rest_ensure_response( $rows ? $rows : [] );
+			return rest_ensure_response( $rows ? $rows : [] );
 	}
 
 	public function delete_highlight( WP_REST_Request $request ) {
-		global $wpdb;
+			global $wpdb;
 
-		$user_id = get_current_user_id();
-		$id      = (int) $request['id'];
-		$table   = Politeia_HL_Schema::table_name();
+			$user_id = get_current_user_id();
+			$id      = (int) $request['id'];
+			$table   = Politeia_HL_Schema::table_name();
 
-		// Verifica propiedad.
-		$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
+			// Check ownership
+			$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
 
-		$owner = $wpdb->get_var(
-			/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Primer argumento es $wpdb->prepare() con placeholders; el nombre de tabla se concatena de forma determinística. */
-			$wpdb->prepare( $owner_sql, $id )
-		);
+			$owner = $wpdb->get_var(
+					/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+					$wpdb->prepare( $owner_sql, $id )
+			);
 
 		if ( ! $owner ) {
-			return new WP_Error( 'rest_not_found', 'No existe.', [ 'status' => 404 ] );
+				return new WP_Error( 'rest_not_found', __( 'Not found.', 'politeia-highlights' ), [ 'status' => 404 ] );
 		}
 
 		if ( (int) $owner !== (int) $user_id ) {
-			return new WP_Error( 'rest_forbidden', 'No puedes borrar este highlight.', [ 'status' => 403 ] );
+				return new WP_Error(
+						'rest_forbidden',
+						__( 'You cannot delete this highlight.', 'politeia-highlights' ),
+						[ 'status' => 403 ]
+				);
 		}
 
-		$deleted = $wpdb->delete( $table, [ 'id' => $id ], [ '%d' ] );
+			$deleted = $wpdb->delete( $table, [ 'id' => $id ], [ '%d' ] );
 
 		if ( false === $deleted ) {
-			return new WP_Error( 'db_delete_error', 'No se pudo borrar.', [ 'status' => 500 ] );
+				return new WP_Error( 'db_delete_error', __( 'Could not delete.', 'politeia-highlights' ), [ 'status' => 500 ] );
 		}
 
-		return new WP_REST_Response( null, 204 );
+			return new WP_REST_Response( null, 204 );
 	}
 }

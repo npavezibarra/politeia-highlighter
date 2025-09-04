@@ -27,16 +27,16 @@
     p = document.createElement('div');
     p.id = 'politeia-hl-note-popover';
     Object.assign(p.style, {
-      position: 'fixed', zIndex: '2147483647', background: '#fff', border: '1px solid #ddd',
-      borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,.12)', padding: '10px',
+      position: 'fixed', zIndex: '2147483647', padding: '10px',
       maxWidth: '360px', display: 'none'
     });
+    // Basic popover structure for viewing notes
     p.innerHTML = `
-      <div class="note-content" role="dialog" aria-modal="true" aria-label="Nota del highlight">
+      <div class="note-content" role="dialog" aria-modal="true" aria-label="${politeiaHL.strings.viewNote}">
         <div class="note-text" id="hl-note-text" style="margin-bottom:8px; white-space:pre-wrap;"></div>
         <div class="actions" style="display:flex; gap:8px; justify-content:flex-end;">
-          <button id="hl-popover-delete">Eliminar</button>
-          <button id="hl-popover-close">Cerrar</button>
+          <button id="hl-popover-delete">${politeiaHL.strings.delete}</button>
+          <button id="hl-popover-close">${politeiaHL.strings.close}</button>
         </div>
       </div>
     `;
@@ -66,7 +66,7 @@
           hideNotePopover();
         } catch (err) {
           console.error(err);
-          alert('No se pudo eliminar el highlight.');
+          alert(politeiaHL.strings.errDelete);
         }
       }
     });
@@ -93,7 +93,7 @@
     pop.style.left = x + 'px';
     pop.style.top = y + 'px';
 
-    byId('hl-note-text').innerText = (text && String(text).trim()) || '(Sin nota)';
+    byId('hl-note-text').innerText = (text && String(text).trim()) || politeiaHL.strings.noNote;
     pop.dataset.hlId = id ? String(id) : '';
 
     pop.style.visibility = 'visible';
@@ -117,12 +117,13 @@
       borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,.12)', padding: '10px',
       gap: '10px', maxWidth: '420px', width: 'max-content'
     });
+    // Toolbar contains color swatches, note textarea and action buttons
     bar.innerHTML = `
       <div class="hl-colors" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
-      <textarea id="politeia-hl-note" placeholder="Nota opcional..." style="min-width:260px; min-height:60px;"></textarea>
+      <textarea id="politeia-hl-note" placeholder="${politeiaHL.strings.notePlaceholder}" style="min-width:260px; min-height:60px;"></textarea>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button id="politeia-hl-save">Guardar</button>
-        <button id="politeia-hl-cancel" class="muted">Cancelar</button>
+        <button id="politeia-hl-save">${politeiaHL.strings.save}</button>
+        <button id="politeia-hl-cancel" class="muted">${politeiaHL.strings.cancel}</button>
       </div>
     `;
     document.body.appendChild(bar);
@@ -139,6 +140,8 @@
       });
       colorsWrap.appendChild(sw);
     });
+    // Select first color by default so user sees an active swatch
+    if (colorsWrap.firstElementChild) colorsWrap.firstElementChild.classList.add('active');
     return bar;
   }
 
@@ -218,20 +221,20 @@
       headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': API.nonce },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error('No se pudo crear el highlight');
+    if (!res.ok) throw new Error(politeiaHL.strings.errCreate);
     return res.json();
   }
   async function apiListHighlights(post_id) {
     const url = new URL(API.base, window.location.origin);
     url.searchParams.set('post_id', post_id);
     const res = await fetch(url.toString(), { credentials: 'same-origin', headers: { 'X-WP-Nonce': API.nonce } });
-    if (!res.ok) throw new Error('No se pudo obtener la lista');
+    if (!res.ok) throw new Error(politeiaHL.strings.errList);
     return res.json();
   }
   async function apiDeleteHighlight(id) {
     const url = new URL(API.base + '/' + id, window.location.origin);
     const res = await fetch(url.toString(), { method: 'DELETE', credentials: 'same-origin', headers: { 'X-WP-Nonce': API.nonce } });
-    if (!res.ok && res.status !== 204) throw new Error('No se pudo borrar');
+    if (!res.ok && res.status !== 204) throw new Error(politeiaHL.strings.errDeleteGeneric);
     return true;
   }
 
@@ -343,15 +346,17 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'hl-note-dot';
+    // Small square badge next to highlighted text showing there is a note
+    const color = markEl.style.background;
     Object.assign(btn.style, {
       display: 'inline-block', width: '10px', height: '10px', marginLeft: '4px',
-      borderRadius: '50%', border: '0', background: '#7c3aed', cursor: 'pointer', verticalAlign: 'middle'
+      borderRadius: '2px', border: '0', background: color, cursor: 'pointer', verticalAlign: 'middle'
     });
-    btn.setAttribute('aria-label', 'Ver nota');
-    btn.title = 'Ver nota';
+    btn.setAttribute('aria-label', politeiaHL.strings.viewNote);
+    btn.title = politeiaHL.strings.viewNote;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const txt = notesById.get(Number(id)) || noteText || '(Sin nota)';
+      const txt = notesById.get(Number(id)) || noteText || politeiaHL.strings.noNote;
       showNotePopover(btn, txt, id);
     });
     markEl.parentNode.insertBefore(btn, markEl.nextSibling);
@@ -436,7 +441,7 @@
           }
         } catch (err) {
           console.error(err);
-          alert('No se pudo guardar el highlight.');
+          alert(politeiaHL.strings.errSave);
         } finally {
           hideToolbar();
           window.getSelection()?.removeAllRanges();
