@@ -80,29 +80,30 @@ class Politeia_HL_REST {
 		if ( ! function_exists( 'sanitize_text_field' ) ) {
 			require_once ABSPATH . 'wp-includes/formatting.php';
 		}
-
+	
 		global $wpdb;
-
+	
 		$user_id = get_current_user_id();
 		$post_id = (int) $request->get_param( 'post_id' );
-
+	
 		$anchor_exact  = wp_unslash( (string) $request->get_param( 'anchor_exact' ) );
 		$anchor_prefix = wp_unslash( (string) $request->get_param( 'anchor_prefix' ) );
 		$anchor_suffix = wp_unslash( (string) $request->get_param( 'anchor_suffix' ) );
 		$color         = sanitize_text_field( (string) $request->get_param( 'color' ) );
 		$note          = wp_unslash( (string) $request->get_param( 'note' ) );
-
+	
 		// Límites razonables.
 		$anchor_prefix = mb_substr( $anchor_prefix, 0, 255 );
 		$anchor_suffix = mb_substr( $anchor_suffix, 0, 255 );
 		$color         = mb_substr( $color, 0, 16 );
-
+		$note          = mb_substr( $note, 0, 10000 ); // por si acaso
+	
 		if ( empty( $anchor_exact ) || empty( $post_id ) ) {
 			return new WP_Error( 'rest_invalid', 'Faltan datos requeridos.', [ 'status' => 400 ] );
 		}
-
+	
 		$table = Politeia_HL_Schema::table_name();
-
+	
 		$inserted = $wpdb->insert(
 			$table,
 			[
@@ -118,13 +119,23 @@ class Politeia_HL_REST {
 			],
 			[ '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s' ]
 		);
-
+	
 		if ( false === $inserted ) {
-			return new WP_Error( 'db_insert_error', 'No se pudo guardar el highlight.', [ 'status' => 500 ] );
+			// Log para desarrollo (WP_DEBUG_LOG debe estar habilitado).
+			error_log( '[Politeia HL] Insert error: ' . $wpdb->last_error . ' | SQL: ' . $wpdb->last_query );
+			// Devuelve razón para depurar en entorno local.
+			return new WP_Error(
+				'db_insert_error',
+				'No se pudo guardar el highlight.',
+				[
+					'status'    => 500,
+					'db_error'  => $wpdb->last_error,
+				]
+			);
 		}
-
+	
 		$id = (int) $wpdb->insert_id;
-
+	
 		return new WP_REST_Response(
 			[
 				'id'            => $id,
@@ -140,7 +151,7 @@ class Politeia_HL_REST {
 			],
 			201
 		);
-	}
+	}	
 
 	public function list_highlights( WP_REST_Request $request ) {
 		global $wpdb;

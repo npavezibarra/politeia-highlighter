@@ -30,12 +30,27 @@ class Politeia_HL_Render {
         );
 
         // Variables para el frontend
-        wp_localize_script('politeia-hl-js', 'politeiaHL', [
-            'rest_url'    => rest_url('politeia/v1/highlights'),
-            'nonce'       => wp_create_nonce('wp_rest'),
-            'currentUser' => get_current_user_id(),
-            'colors'      => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
-        ]);
+        wp_localize_script(
+            'politeia-hl-js',
+            'politeiaHL',
+            [
+                // 👇 RELATIVA: evita mixed content y asegura envío de cookies same-origin
+                'rest_url'    => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/highlights' ) ) ),
+                'nonce'       => wp_create_nonce('wp_rest'),
+                'currentUser' => get_current_user_id(),
+                'colors'      => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+            ]
+        );
+        wp_localize_script(
+            'politeia-hl-js',
+            'politeiaHL',
+            [
+              'rest_url'    => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/highlights' ) ) ),
+              'nonce'       => wp_create_nonce('wp_rest'),
+              'currentUser' => get_current_user_id(),
+              'colors'      => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+            ]
+        );          
     }
 
     public function append_container( $content ) {
