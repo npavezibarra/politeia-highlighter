@@ -114,7 +114,7 @@
     Object.assign(bar.style, {
       position: 'fixed', zIndex: '2147483647', display: 'none',
       left: '0px', top: '0px', background: '#fff', border: '1px solid #ddd',
-      borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,.12)', padding: '10px',
+      borderRadius: '10px', boxShadow: '0 0px 25px rgba(0,0,0,.25)', padding: '10px',
       gap: '10px', maxWidth: '420px', width: 'max-content'
     });
     // Toolbar contains color swatches, note textarea and action buttons
