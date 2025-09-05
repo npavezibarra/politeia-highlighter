@@ -49,10 +49,8 @@ class Politeia_HL_Highlights_Table {
         $html .= '<table class="politeia-hl-table">';
         $html .= '<thead><tr>';
         $html .= '<th data-sort="index">' . esc_html__( 'Index', 'politeia-highlights' ) . '</th>';
-        $html .= '<th>' . esc_html__( 'Text', 'politeia-highlights' ) . '</th>';
-        $html .= '<th data-sort="date">' . esc_html__( 'Date', 'politeia-highlights' ) . '</th>';
+        $html .= '<th>' . esc_html__( 'Highlighted Text', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Note', 'politeia-highlights' ) . '</th>';
-        $html .= '<th>' . esc_html__( 'Post', 'politeia-highlights' ) . '</th>';
         $html .= '</tr></thead>';
         $html .= '<tbody></tbody>';
         $html .= '</table>';

@@ -239,7 +239,8 @@ class Politeia_HL_REST {
 		}
 
 		foreach ( $rows as &$row ) {
-				$row['post_title'] = get_the_title( $row['post_id'] );
+			$row['post_title'] = get_the_title( $row['post_id'] );
+			$row['post_url']   = get_permalink( $row['post_id'] );
 		}
 
 			return rest_ensure_response( $rows );
