@@ -19,3 +19,11 @@
     display: block;
     font-size: 0.9em;
 }
+
+.hl-swatch.active {
+    outline: 2px solid #000;
+}
+
+.hl-colors {
+    padding-bottom: 10px;
+}
