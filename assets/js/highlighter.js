@@ -75,8 +75,9 @@
         if (!id) return hideNotePopover();
         const mark = document.querySelector(`mark.politeia-hl-mark[data-hl-id="${id}"]`);
         if (!mark) return hideNotePopover();
+        const rect = p.getBoundingClientRect();
         hideNotePopover();
-        showEditToolbar(mark, id);
+        showEditToolbar(mark, id, rect);
       }
     });
     return p;
@@ -276,6 +277,22 @@
     bar.style.visibility = 'visible';
   }
 
+  function showToolbarAtRect(rect) {
+    hideRemoveButton();
+    const bar = ensureToolbar();
+    bar.style.visibility = 'hidden';
+    bar.style.display = 'block';
+    const w = bar.offsetWidth;
+    const h = bar.offsetHeight;
+    let x = rect.left;
+    let y = rect.top;
+    x = clamp(x, 8, window.innerWidth - w - 8);
+    y = clamp(y, 8, window.innerHeight - h - 8);
+    bar.style.left = x + 'px';
+    bar.style.top = y + 'px';
+    bar.style.visibility = 'visible';
+  }
+
   function hideToolbar() {
     const bar = byId('politeia-hl-toolbar');
     if (bar) {
@@ -287,7 +304,7 @@
     editingId = null;
   }
 
-  function showEditToolbar(markEl, id) {
+  function showEditToolbar(markEl, id, rect) {
     editingId = Number(id);
     lastSelectionRange = null;
     const bar = ensureToolbar();
@@ -297,7 +314,11 @@
     const color = markEl.style.background;
     const sw = Array.from(bar.querySelectorAll('.hl-swatch')).find(btn => btn.getAttribute('data-color').toLowerCase() === color.toLowerCase());
     if (sw) sw.classList.add('active');
-    showToolbarAtMouse();
+    if (rect) {
+      showToolbarAtRect(rect);
+    } else {
+      showToolbarAtMouse();
+    }
   }
 
   function currentColor() {
