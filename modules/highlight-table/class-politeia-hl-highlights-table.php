@@ -43,9 +43,7 @@ class Politeia_HL_Highlights_Table {
 
         $html  = '<div class="politeia-hl-filter">';
         $html .= '<label for="politeia-hl-color">' . esc_html__( 'Color', 'politeia-highlights' ) . '</label>';
-        $html .= '<select id="politeia-hl-color">';
-        $html .= '<option value="">' . esc_html__( 'All', 'politeia-highlights' ) . '</option>';
-        $html .= '</select>';
+        $html .= '<div id="politeia-hl-color" class="hl-colors" style="display:flex; gap:6px; flex-wrap:wrap;"></div>';
         $html .= '</div>';
 
         $html .= '<table class="politeia-hl-table">';

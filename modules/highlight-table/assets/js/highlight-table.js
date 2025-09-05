@@ -3,15 +3,31 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!table || !window.politeiaHLTable) return;
 
   const tbody = table.querySelector('tbody');
-  const select = document.querySelector('#politeia-hl-color');
+  const colorsWrap = document.querySelector('#politeia-hl-color');
 
-  if (select && Array.isArray(politeiaHLTable.colors)) {
-    politeiaHLTable.colors.forEach(function(c) {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      select.appendChild(opt);
+  if (colorsWrap && Array.isArray(politeiaHLTable.colors)) {
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.textContent = 'All';
+    allBtn.className = 'hl-swatch';
+    Object.assign(allBtn.style, {
+      height: '22px', borderRadius: '4px',
+      border: '1px solid rgba(0,0,0,.15)', background: '#fff',
+      cursor: 'pointer', padding: '0 8px'
     });
+    colorsWrap.appendChild(allBtn);
+    politeiaHLTable.colors.forEach(function(c) {
+      const sw = document.createElement('button');
+      sw.type = 'button';
+      sw.className = 'hl-swatch';
+      sw.setAttribute('data-color', c);
+      Object.assign(sw.style, {
+        width: '22px', height: '22px', borderRadius: '50%',
+        border: '1px solid rgba(0,0,0,.15)', background: c, cursor: 'pointer'
+      });
+      colorsWrap.appendChild(sw);
+    });
+    if (colorsWrap.firstElementChild) colorsWrap.firstElementChild.classList.add('active');
   }
 
   function escapeHtml(str) {
@@ -50,9 +66,13 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
-  if (select) {
-    select.addEventListener('change', function() {
-      fetchHighlights(this.value);
+  if (colorsWrap) {
+    colorsWrap.addEventListener('click', function(e) {
+      const btn = e.target.closest('.hl-swatch');
+      if (!btn) return;
+      colorsWrap.querySelectorAll('.hl-swatch').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      fetchHighlights(btn.dataset.color || '');
     });
   }
 
