@@ -55,12 +55,12 @@ document.addEventListener('DOMContentLoaded', function() {
           const timeStr = created.toLocaleTimeString();
           tr.innerHTML =
             '<td class="hl-index">' + (idx + 1) + '</td>' +
-            '<td class="hl-text">' + escapeHtml(row.anchor_exact) + '</td>' +
-            '<td class="hl-date" data-timestamp="' + Math.floor(created.getTime() / 1000) + '">' +
-              '<span class="hl-date-day">' + dateStr + '</span><br><small class="hl-date-time">' + timeStr + '</small>' +
+            '<td class="hl-text">' +
+              '<a class="hl-post-title" href="' + escapeHtml(row.post_url) + '">' + escapeHtml(row.post_title) + '</a>' +
+              '<div class="hl-highlight">' + escapeHtml(row.anchor_exact) + '</div>' +
+              '<div class="hl-date" data-timestamp="' + Math.floor(created.getTime() / 1000) + '">' + dateStr + ' ' + timeStr + '</div>' +
             '</td>' +
-            '<td class="hl-note">' + escapeHtml(row.note) + '</td>' +
-            '<td class="hl-post">' + escapeHtml(row.post_title) + '</td>';
+            '<td class="hl-note">' + escapeHtml(row.note) + '</td>';
           tbody.appendChild(tr);
         });
       });

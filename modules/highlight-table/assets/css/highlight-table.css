@@ -15,9 +15,17 @@
     background: #f5f5f5;
 }
 
-.politeia-hl-table .hl-date-time {
+
+.politeia-hl-table .hl-text .hl-post-title,
+.politeia-hl-table .hl-text .hl-date {
     display: block;
-    font-size: 0.9em;
+    font-size: 13px;
+}
+
+.politeia-hl-table .hl-text .hl-highlight {
+    display: block;
+    font-size: 18px;
+    margin: 4px 0;
 }
 
 .hl-swatch.active {
