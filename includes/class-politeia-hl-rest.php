@@ -46,18 +46,30 @@ class Politeia_HL_REST {
 			]
 		);
 
-		register_rest_route(
-			self::NS,
-			'/highlights/(?P<id>\d+)',
-			[
-				'methods'             => WP_REST_Server::DELETABLE, // DELETE.
-				'callback'            => [ $this, 'delete_highlight' ],
-				'permission_callback' => [ $this, 'auth_required' ],
-				'args'                => [
-					'id' => [ 'type' => 'integer', 'required' => true ],
-				],
-			]
-		);
+                register_rest_route(
+                        self::NS,
+                        '/highlights/(?P<id>\d+)',
+                        [
+							[
+								'methods'             => WP_REST_Server::EDITABLE, // PATCH.
+								'callback'            => [ $this, 'update_highlight' ],
+								'permission_callback' => [ $this, 'auth_required' ],
+								'args'                => [
+									'id'    => [ 'type' => 'integer', 'required' => true ],
+									'color' => [ 'type' => 'string',  'required' => false ],
+									'note'  => [ 'type' => 'string',  'required' => false ],
+								],
+							],
+							[
+								'methods'             => WP_REST_Server::DELETABLE, // DELETE.
+								'callback'            => [ $this, 'delete_highlight' ],
+								'permission_callback' => [ $this, 'auth_required' ],
+								'args'                => [
+									'id' => [ 'type' => 'integer', 'required' => true ],
+								],
+							],
+                        ]
+                );
 	}
 
         /** -------- Helpers -------- */
@@ -155,46 +167,111 @@ class Politeia_HL_REST {
 	}
 
 	public function list_highlights( WP_REST_Request $request ) {
-			global $wpdb;
+					global $wpdb;
 
-			$user_id = get_current_user_id();
-			$post_id = (int) $request->get_param( 'post_id' );
+		$user_id = get_current_user_id();
+		$post_id = (int) $request->get_param( 'post_id' );
 
 		if ( empty( $post_id ) ) {
 				return new WP_Error( 'rest_invalid', __( 'post_id is required.', 'politeia-highlights' ), [ 'status' => 400 ] );
 		}
 
-			$table = Politeia_HL_Schema::table_name();
+		$table = Politeia_HL_Schema::table_name();
 
-			// Safe query: table name by concatenation, values with placeholders
-			$sql  = 'SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at ';
-			$sql .= 'FROM ' . $table . ' ';
-			$sql .= 'WHERE user_id = %d AND post_id = %d ';
-			$sql .= 'ORDER BY id DESC';
+		// Safe query: table name by concatenation, values with placeholders
+		$sql  = 'SELECT id, user_id, post_id, anchor_exact, anchor_prefix, anchor_suffix, color, note, created_at, updated_at ';
+		$sql .= 'FROM ' . $table . ' ';
+		$sql .= 'WHERE user_id = %d AND post_id = %d ';
+		$sql .= 'ORDER BY id DESC';
 
-			$rows = $wpdb->get_results(
-					/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
-					$wpdb->prepare( $sql, $user_id, $post_id ),
-					ARRAY_A
+		$rows = $wpdb->get_results(
+				/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+				$wpdb->prepare( $sql, $user_id, $post_id ),
+				ARRAY_A
+		);
+
+					return rest_ensure_response( $rows ? $rows : [] );
+	}
+
+	public function update_highlight( WP_REST_Request $request ) {
+		if ( ! function_exists( 'sanitize_text_field' ) ) {
+			require_once ABSPATH . 'wp-includes/formatting.php';
+		}
+
+					global $wpdb;
+
+					$user_id = get_current_user_id();
+					$id      = (int) $request['id'];
+					$color   = sanitize_text_field( (string) $request->get_param( 'color' ) );
+					$note    = sanitize_textarea_field( wp_unslash( (string) $request->get_param( 'note' ) ) );
+
+					$color = mb_substr( $color, 0, 16 );
+					$note  = mb_substr( $note, 0, 10000 );
+
+					$table = Politeia_HL_Schema::table_name();
+
+					$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
+					$owner     = $wpdb->get_var(
+							/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+							$wpdb->prepare( $owner_sql, $id )
+					);
+
+		if ( ! $owner ) {
+						return new WP_Error( 'rest_not_found', __( 'Not found.', 'politeia-highlights' ), [ 'status' => 404 ] );
+		}
+
+		if ( (int) $owner !== (int) $user_id ) {
+							return new WP_Error(
+									'rest_forbidden',
+									__( 'You cannot edit this highlight.', 'politeia-highlights' ),
+									[ 'status' => 403 ]
+							);
+		}
+
+		$updated = $wpdb->update(
+		$table,
+		[
+			'color'      => $color ? $color : '#ffe066',
+			'note'       => $note,
+			'updated_at' => current_time( 'mysql' ),
+		],
+		[ 'id' => $id ],
+		[ '%s', '%s', '%s' ],
+		[ '%d' ]
+		);
+
+		if ( false === $updated ) {
+			return new WP_Error(
+			'db_update_error',
+			__( 'Could not save highlight.', 'politeia-highlights' ),
+			[ 'status' => 500 ]
 			);
+		}
 
-			return rest_ensure_response( $rows ? $rows : [] );
+					return rest_ensure_response(
+							[
+								'id'      => $id,
+								'user_id' => $user_id,
+								'color'   => $color ? $color : '#ffe066',
+								'note'    => $note,
+							]
+					);
 	}
 
 	public function delete_highlight( WP_REST_Request $request ) {
-			global $wpdb;
+					global $wpdb;
 
-			$user_id = get_current_user_id();
-			$id      = (int) $request['id'];
-			$table   = Politeia_HL_Schema::table_name();
+		$user_id = get_current_user_id();
+		$id      = (int) $request['id'];
+		$table   = Politeia_HL_Schema::table_name();
 
-			// Check ownership
-			$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
+		// Check ownership
+		$owner_sql = 'SELECT user_id FROM ' . $table . ' WHERE id = %d';
 
-			$owner = $wpdb->get_var(
-					/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
-					$wpdb->prepare( $owner_sql, $id )
-			);
+		$owner = $wpdb->get_var(
+				/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+				$wpdb->prepare( $owner_sql, $id )
+		);
 
 		if ( ! $owner ) {
 				return new WP_Error( 'rest_not_found', __( 'Not found.', 'politeia-highlights' ), [ 'status' => 404 ] );
@@ -208,12 +285,12 @@ class Politeia_HL_REST {
 				);
 		}
 
-			$deleted = $wpdb->delete( $table, [ 'id' => $id ], [ '%d' ] );
+		$deleted = $wpdb->delete( $table, [ 'id' => $id ], [ '%d' ] );
 
 		if ( false === $deleted ) {
 				return new WP_Error( 'db_delete_error', __( 'Could not delete.', 'politeia-highlights' ), [ 'status' => 500 ] );
 		}
 
-			return new WP_REST_Response( null, 204 );
+		return new WP_REST_Response( null, 204 );
 	}
 }

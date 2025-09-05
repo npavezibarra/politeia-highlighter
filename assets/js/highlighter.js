@@ -7,6 +7,7 @@
   const notesById = new Map();
   let lastMouse = { x: 0, y: 0 }; // viewport coords
   let lastSelectionRange = null; // persists user selection even if focus moves
+  let editingId = null;
 
   // ---------- Helpers ----------
   const byId = (id) => document.getElementById(id);
@@ -33,10 +34,10 @@
     // Basic popover structure for viewing notes
     p.innerHTML = `
       <div class="note-content" role="dialog" aria-modal="true" aria-label="${politeiaHL.strings.viewNote}">
-        <div class="note-text" id="hl-note-text" style="margin-bottom:8px; white-space:pre-wrap;"></div>
+        <div class="note-text" id="hl-note-text" style="margin-bottom:20px; white-space:pre-wrap;"></div>
         <div class="actions" style="display:flex; gap:8px; justify-content:flex-end;">
           <button id="hl-popover-delete">${politeiaHL.strings.delete}</button>
-          <button id="hl-popover-close">${politeiaHL.strings.close}</button>
+          <button id="hl-popover-edit">${politeiaHL.strings.edit}</button>
         </div>
       </div>
     `;
@@ -45,7 +46,7 @@
     document.addEventListener('click', (e) => {
       const inside = p.contains(e.target);
       const isDot = e.target && e.target.classList && e.target.classList.contains('hl-note-dot');
-      if (e.target.id === 'hl-popover-close' || (!inside && p.style.display === 'block' && !isDot)) hideNotePopover();
+      if (!inside && p.style.display === 'block' && !isDot) hideNotePopover();
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideNotePopover(); });
 
@@ -69,11 +70,21 @@
           alert(politeiaHL.strings.errDelete);
         }
       }
+      if (e.target && e.target.id === 'hl-popover-edit') {
+        const id = p.dataset.hlId ? parseInt(p.dataset.hlId, 10) : null;
+        if (!id) return hideNotePopover();
+        const mark = document.querySelector(`mark.politeia-hl-mark[data-hl-id="${id}"]`);
+        if (!mark) return hideNotePopover();
+        const rect = p.getBoundingClientRect();
+        hideNotePopover();
+        showEditToolbar(mark, id, rect);
+      }
     });
     return p;
   }
 
   function showNotePopover(anchorEl, text, id) {
+    hideRemoveButton();
     const pop = ensureNotePopover();
     const rect = anchorEl.getBoundingClientRect();
     // initial placement below anchor
@@ -104,6 +115,73 @@
     if (pop) { pop.style.display = 'none'; pop.dataset.hlId = ''; }
   }
 
+  function ensureRemoveButton() {
+    let btn = byId('politeia-hl-remove-btn');
+    if (btn) return btn;
+    btn = document.createElement('button');
+    btn.id = 'politeia-hl-remove-btn';
+    btn.className = 'hl-remove-btn';
+    btn.textContent = politeiaHL.strings.remove;
+    Object.assign(btn.style, {
+      position: 'fixed', zIndex: '2147483647', display: 'none'
+    });
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.hlId ? parseInt(btn.dataset.hlId, 10) : null;
+      if (!id) return hideRemoveButton();
+      try {
+        await apiDeleteHighlight(id);
+        const mark = document.querySelector(`mark.politeia-hl-mark[data-hl-id="${id}"]`);
+        if (mark) {
+          const next = mark.nextSibling;
+          if (next && next.classList && next.classList.contains('hl-note-dot')) next.remove();
+          const text = document.createTextNode(mark.textContent);
+          mark.parentNode.replaceChild(text, mark);
+        }
+        notesById.delete(id);
+      } catch (err) {
+        console.error(err);
+        alert(politeiaHL.strings.errDelete);
+      } finally {
+        hideRemoveButton();
+      }
+    });
+    document.body.appendChild(btn);
+    return btn;
+  }
+
+  function showRemoveButton(anchorEl, id) {
+    const btn = ensureRemoveButton();
+    const rect = anchorEl.getBoundingClientRect();
+    btn.style.visibility = 'hidden';
+    btn.style.display = 'block';
+    const w = btn.offsetWidth;
+    const h = btn.offsetHeight;
+    let x = rect.right;
+    let y = rect.bottom + 4;
+    x = clamp(x, 8, window.innerWidth - w - 8);
+    y = clamp(y, 8, window.innerHeight - h - 8);
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    btn.dataset.hlId = id ? String(id) : '';
+    btn.style.visibility = 'visible';
+  }
+
+  function hideRemoveButton() {
+    const btn = byId('politeia-hl-remove-btn');
+    if (btn) { btn.style.display = 'none'; btn.dataset.hlId = ''; }
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = byId('politeia-hl-remove-btn');
+    if (e.target && e.target.matches('mark.politeia-hl-mark')) {
+      const id = e.target.getAttribute('data-hl-id');
+      showRemoveButton(e.target, id);
+    } else if (!btn || !btn.contains(e.target)) {
+      hideRemoveButton();
+    }
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideRemoveButton(); });
+
   // ---------- Toolbar (fixed near selection/mouse) ----------
   function ensureToolbar() {
     let bar = byId('politeia-hl-toolbar');
@@ -114,7 +192,7 @@
     Object.assign(bar.style, {
       position: 'fixed', zIndex: '2147483647', display: 'none',
       left: '0px', top: '0px', background: '#fff', border: '1px solid #ddd',
-      borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,.12)', padding: '10px',
+      borderRadius: '10px', boxShadow: '0 0px 25px rgba(0,0,0,.25)', padding: '20px',
       gap: '10px', maxWidth: '420px', width: 'max-content'
     });
     // Toolbar contains color swatches, note textarea and action buttons
@@ -156,6 +234,7 @@
   }
 
   function showToolbarNearSelection() {
+    hideRemoveButton();
     const rect = selectionRect();
     if (!rect) return false;
 
@@ -183,6 +262,7 @@
   }
 
   function showToolbarAtMouse() {
+    hideRemoveButton();
     const bar = ensureToolbar();
     bar.style.visibility = 'hidden';
     bar.style.display = 'block';
@@ -190,6 +270,22 @@
     const h = bar.offsetHeight;
     let x = lastMouse.x + 12;
     let y = lastMouse.y + 12;
+    x = clamp(x, 8, window.innerWidth - w - 8);
+    y = clamp(y, 8, window.innerHeight - h - 8);
+    bar.style.left = x + 'px';
+    bar.style.top = y + 'px';
+    bar.style.visibility = 'visible';
+  }
+
+  function showToolbarAtRect(rect) {
+    hideRemoveButton();
+    const bar = ensureToolbar();
+    bar.style.visibility = 'hidden';
+    bar.style.display = 'block';
+    const w = bar.offsetWidth;
+    const h = bar.offsetHeight;
+    let x = rect.left;
+    let y = rect.top;
     x = clamp(x, 8, window.innerWidth - w - 8);
     y = clamp(y, 8, window.innerHeight - h - 8);
     bar.style.left = x + 'px';
@@ -205,6 +301,24 @@
       bar.querySelectorAll('.hl-swatch.active').forEach(el => el.classList.remove('active'));
     }
     lastSelectionRange = null;
+    editingId = null;
+  }
+
+  function showEditToolbar(markEl, id, rect) {
+    editingId = Number(id);
+    lastSelectionRange = null;
+    const bar = ensureToolbar();
+    const ta = byId('politeia-hl-note');
+    if (ta) ta.value = notesById.get(Number(id)) || '';
+    document.querySelectorAll('.hl-swatch.active').forEach(el => el.classList.remove('active'));
+    const color = markEl.style.background;
+    const sw = Array.from(bar.querySelectorAll('.hl-swatch')).find(btn => btn.getAttribute('data-color').toLowerCase() === color.toLowerCase());
+    if (sw) sw.classList.add('active');
+    if (rect) {
+      showToolbarAtRect(rect);
+    } else {
+      showToolbarAtMouse();
+    }
   }
 
   function currentColor() {
@@ -229,6 +343,17 @@
     url.searchParams.set('post_id', post_id);
     const res = await fetch(url.toString(), { credentials: 'same-origin', headers: { 'X-WP-Nonce': API.nonce } });
     if (!res.ok) throw new Error(politeiaHL.strings.errList);
+    return res.json();
+  }
+  async function apiUpdateHighlight(id, payload) {
+    const url = new URL(API.base + '/' + id, window.location.origin);
+    const res = await fetch(url.toString(), {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': API.nonce },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(politeiaHL.strings.errSave);
     return res.json();
   }
   async function apiDeleteHighlight(id) {
@@ -404,6 +529,32 @@
     // Save / Cancel
     document.addEventListener('click', async (e) => {
       if (e.target && e.target.id === 'politeia-hl-save') {
+        const note = (byId('politeia-hl-note')?.value || '').slice(0, 1000);
+        if (editingId != null) {
+          const payload = { color: currentColor(), note };
+          try {
+            await apiUpdateHighlight(editingId, payload);
+            notesById.set(editingId, note || '');
+            const mark = document.querySelector(`mark.politeia-hl-mark[data-hl-id="${editingId}"]`);
+            if (mark) {
+              mark.style.background = payload.color;
+              if (note && note.trim()) {
+                injectNoteBadge(mark, note);
+              } else {
+                const next = mark.nextSibling;
+                if (next && next.classList && next.classList.contains('hl-note-dot')) next.remove();
+              }
+            }
+          } catch (err) {
+            console.error(err);
+            alert(politeiaHL.strings.errSave);
+          } finally {
+            hideToolbar();
+            window.getSelection()?.removeAllRanges();
+          }
+          return;
+        }
+
         const sel = lastSelectionRange;
         const text = sel ? sel.toString().trim() : '';
         if (!text) { hideToolbar(); return; }
@@ -421,7 +572,6 @@
           return { exact: text, anchor_prefix, anchor_suffix };
         })(sel);
 
-        const note = (byId('politeia-hl-note')?.value || '').slice(0, 1000);
         const payload = {
           post_id: getPostId(),
           anchor_exact: selector.exact,
