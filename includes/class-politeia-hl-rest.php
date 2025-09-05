@@ -70,6 +70,19 @@ class Politeia_HL_REST {
 							],
                         ]
                 );
+
+                register_rest_route(
+                        self::NS,
+                        '/user-highlights',
+                        [
+							'methods'             => WP_REST_Server::READABLE,
+							'callback'            => [ $this, 'list_user_highlights' ],
+							'permission_callback' => [ $this, 'auth_required' ],
+							'args'                => [
+								'color' => [ 'type' => 'string', 'required' => false ],
+							],
+                        ]
+                );
 	}
 
         /** -------- Helpers -------- */
@@ -167,7 +180,7 @@ class Politeia_HL_REST {
 	}
 
 	public function list_highlights( WP_REST_Request $request ) {
-					global $wpdb;
+									global $wpdb;
 
 		$user_id = get_current_user_id();
 		$post_id = (int) $request->get_param( 'post_id' );
@@ -185,12 +198,51 @@ class Politeia_HL_REST {
 		$sql .= 'ORDER BY id DESC';
 
 		$rows = $wpdb->get_results(
-				/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
-				$wpdb->prepare( $sql, $user_id, $post_id ),
-				ARRAY_A
+			/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+			$wpdb->prepare( $sql, $user_id, $post_id ),
+			ARRAY_A
 		);
 
-					return rest_ensure_response( $rows ? $rows : [] );
+									return rest_ensure_response( $rows ? $rows : [] );
+	}
+
+	public function list_user_highlights( WP_REST_Request $request ) {
+		if ( ! function_exists( 'sanitize_text_field' ) ) {
+				require_once ABSPATH . 'wp-includes/formatting.php';
+		}
+
+			global $wpdb;
+
+			$user_id = get_current_user_id();
+			$color   = sanitize_text_field( (string) $request->get_param( 'color' ) );
+
+			$table = Politeia_HL_Schema::table_name();
+
+			$sql    = 'SELECT id, post_id, anchor_exact, note, color, created_at FROM ' . $table . ' WHERE user_id = %d';
+			$params = [ $user_id ];
+
+		if ( $color ) {
+				$sql    .= ' AND color = %s';
+				$params[] = $color;
+		}
+
+			$sql .= ' ORDER BY created_at DESC';
+
+			$rows = $wpdb->get_results(
+					/* phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- First argument is $wpdb->prepare() with placeholders; table name is concatenated deterministically. */
+					$wpdb->prepare( $sql, ...$params ),
+					ARRAY_A
+			);
+
+		if ( ! $rows ) {
+				return rest_ensure_response( [] );
+		}
+
+		foreach ( $rows as &$row ) {
+				$row['post_title'] = get_the_title( $row['post_id'] );
+		}
+
+			return rest_ensure_response( $rows );
 	}
 
 	public function update_highlight( WP_REST_Request $request ) {
