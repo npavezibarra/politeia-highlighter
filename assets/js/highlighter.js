@@ -371,7 +371,6 @@
   const normalizeSpaces = (s) => (s || '').replace(/\s+/g, ' ').trim();
 
     function findBestMatch(exact, prefix, suffix, scopeEl) {
-      exact = normalizeSpaces(exact);
       const pfx = normalizeSpaces(prefix);
       const sfx = normalizeSpaces(suffix);
       if (!exact) return null;
@@ -404,7 +403,7 @@
       if (best) return best;
 
       // Fallback: allow matches spanning multiple text nodes.
-      const joined = normalizeSpaces(scope.innerText || scope.textContent || '');
+      const joined = scope.textContent || '';
       const idx = joined.indexOf(exact);
       if (idx === -1) return null;
 
