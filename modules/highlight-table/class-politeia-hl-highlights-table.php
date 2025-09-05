@@ -26,52 +26,37 @@ class Politeia_HL_Highlights_Table {
             POLITEIA_HL_VERSION,
             true
         );
+
+        wp_localize_script(
+            'politeia-hl-table-js',
+            'politeiaHLTable',
+            [
+                'restUrl' => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/user-highlights' ) ) ),
+                'nonce'   => wp_create_nonce( 'wp_rest' ),
+                'colors'  => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+            ]
+        );
     }
 
     public function render_shortcode() {
         if ( ! is_user_logged_in() ) return '';
 
-        global $wpdb;
-        $table   = Politeia_HL_Schema::table_name();
-        $user_id = get_current_user_id();
+        $html  = '<div class="politeia-hl-filter">';
+        $html .= '<label for="politeia-hl-color">' . esc_html__( 'Color', 'politeia-highlights' ) . '</label>';
+        $html .= '<select id="politeia-hl-color">';
+        $html .= '<option value="">' . esc_html__( 'All', 'politeia-highlights' ) . '</option>';
+        $html .= '</select>';
+        $html .= '</div>';
 
-        $query   = $wpdb->prepare( "SELECT * FROM {$table} WHERE user_id = %d ORDER BY created_at DESC", $user_id ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $results = $wpdb->get_results( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-
-        if ( empty( $results ) ) {
-            return '<p>' . esc_html__( 'No highlights found.', 'politeia-highlights' ) . '</p>';
-        }
-
-        $rows  = '';
-        $index = 1;
-        foreach ( $results as $row ) {
-            $date       = mysql2date( get_option( 'date_format' ), $row->created_at );
-            $timestamp  = strtotime( $row->created_at );
-            $note       = $row->note ? esc_html( $row->note ) : '';
-            $color      = esc_attr( $row->color );
-            $post_title = esc_html( get_the_title( $row->post_id ) );
-
-            $rows .= '<tr>';
-            $rows .= '<td class="hl-index">' . intval( $index ) . '</td>';
-            $rows .= '<td class="hl-text">' . esc_html( $row->anchor_exact ) . '</td>';
-            $rows .= '<td class="hl-date" data-timestamp="' . intval( $timestamp ) . '">' . esc_html( $date ) . '</td>';
-            $rows .= '<td class="hl-note">' . $note . '</td>';
-            $rows .= '<td class="hl-color" data-color="' . $color . '" style="background-color:' . $color . ';"></td>';
-            $rows .= '<td class="hl-post">' . $post_title . '</td>';
-            $rows .= '</tr>';
-            ++$index;
-        }
-
-        $html  = '<table class="politeia-hl-table">';
+        $html .= '<table class="politeia-hl-table">';
         $html .= '<thead><tr>';
         $html .= '<th data-sort="index">' . esc_html__( 'Index', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Text', 'politeia-highlights' ) . '</th>';
         $html .= '<th data-sort="date">' . esc_html__( 'Date', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Note', 'politeia-highlights' ) . '</th>';
-        $html .= '<th data-sort="color">' . esc_html__( 'Color', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Post', 'politeia-highlights' ) . '</th>';
         $html .= '</tr></thead>';
-        $html .= '<tbody>' . $rows . '</tbody>';
+        $html .= '<tbody></tbody>';
         $html .= '</table>';
 
         return $html;
