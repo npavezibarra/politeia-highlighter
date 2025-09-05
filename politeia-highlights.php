@@ -18,6 +18,7 @@ define( 'POLITEIA_HL_URL', plugin_dir_url( __FILE__ ) );
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-schema.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-rest.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/class-politeia-hl-render.php';
+require_once plugin_dir_path( __FILE__ ) . 'modules/highlight-table/class-politeia-hl-highlights-table.php';
 
 // ===== Activation =====
 function politeia_hl_activate() {
@@ -32,5 +33,6 @@ function politeia_hl_init() {
     // Register REST routes and front-end renderer
     new Politeia_HL_REST();
     new Politeia_HL_Render();
+    new Politeia_HL_Highlights_Table();
 }
 add_action( 'plugins_loaded', 'politeia_hl_init' );

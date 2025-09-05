@@ -1,0 +1,16 @@
+.politeia-hl-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.politeia-hl-table th,
+.politeia-hl-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+.politeia-hl-table th {
+    cursor: pointer;
+    background: #f5f5f5;
+}
