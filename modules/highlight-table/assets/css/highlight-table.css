@@ -1,6 +1,6 @@
 .politeia-hl-table {
     width: 100%;
-    border-spacing: 10px 30px;
+    border-spacing: 0 30px;
 }
 
 .politeia-hl-table tr {
@@ -51,7 +51,15 @@
 .politeia-hl-table .hl-text,
 .politeia-hl-table .hl-note {
     border: 1px solid #000;
-    border-radius: 9px;
+}
+
+.politeia-hl-table .hl-text {
+    border-radius: 9px 0 0 9px;
+}
+
+.politeia-hl-table .hl-note {
+    border-left: none;
+    border-radius: 0 9px 9px 0;
 }
 
 .politeia-hl-table .hl-note {
@@ -121,6 +129,7 @@
 
     .politeia-hl-table .hl-note {
         border-top: none;
+        border-left: 1px solid #000;
         border-radius: 0 0 9px 9px;
     }
 
