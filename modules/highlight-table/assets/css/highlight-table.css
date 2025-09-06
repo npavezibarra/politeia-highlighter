@@ -3,6 +3,12 @@
     border-spacing: 10px 0;
 }
 
+@media (min-width: 767px) {
+    .politeia-hl-table {
+        border-spacing: 10px 10px;
+    }
+}
+
 .politeia-hl-table tr {
     border: none;
 }
