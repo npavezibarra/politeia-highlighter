@@ -95,6 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const textarea = document.createElement('textarea');
       textarea.className = 'hl-note-input';
       textarea.value = text;
+      const width = cell.getBoundingClientRect().width;
+      cell.style.width = width + 'px';
       textarea.style.width = '100%';
       cell.querySelector('.note-display').replaceWith(textarea);
       link.textContent = saveLabel;
@@ -117,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
         textarea.replaceWith(div);
         link.textContent = editLabel;
         delete cell.dataset.editing;
+        cell.style.width = '';
       } catch (err) {
         alert(errSave);
       }
