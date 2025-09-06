@@ -3,6 +3,10 @@
     border-collapse: collapse;
 }
 
+.politeia-hl-table tr {
+    border: 1px solid #000;
+}
+
 .politeia-hl-filter {
     display: flex;
     justify-content: space-between;
@@ -11,9 +15,14 @@
 
 .politeia-hl-table th,
 .politeia-hl-table td {
-    border: 1px solid #ccc;
+    border: none;
     padding: 8px;
     text-align: left;
+}
+
+.politeia-hl-table th + th,
+.politeia-hl-table td + td {
+    border-left: 1px solid #ccc;
 }
 
 .politeia-hl-table th {
@@ -59,4 +68,31 @@
 
 .politeia-hl-filter .hl-colors {
     margin-left: auto;
+}
+
+@media (max-width: 767px) {
+    .politeia-hl-table th:nth-child(2) {
+        display: none;
+    }
+
+    .politeia-hl-table tbody tr {
+        display: block;
+        text-align: center;
+    }
+
+    .politeia-hl-table tbody td {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+
+    .politeia-hl-table th,
+    .politeia-hl-table td {
+        text-align: center;
+    }
+
+    .politeia-hl-table th + th,
+    .politeia-hl-table td + td {
+        border-left: none;
+    }
 }
