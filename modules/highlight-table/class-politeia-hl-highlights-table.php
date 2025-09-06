@@ -31,10 +31,14 @@ class Politeia_HL_Highlights_Table {
             'politeia-hl-table-js',
             'politeiaHLTable',
             [
-                'restUrl'  => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/user-highlights' ) ) ),
-                'nonce'    => wp_create_nonce( 'wp_rest' ),
-                'colors'   => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
-                'allLabel' => esc_html__( 'All', 'politeia-highlights' ),
+                'restUrl'   => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/user-highlights' ) ) ),
+                'apiBase'   => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/highlights' ) ) ),
+                'nonce'     => wp_create_nonce( 'wp_rest' ),
+                'colors'    => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+                'allLabel'  => esc_html__( 'All', 'politeia-highlights' ),
+                'editLabel' => esc_html__( 'Edit', 'politeia-highlights' ),
+                'saveLabel' => esc_html__( 'Save', 'politeia-highlights' ),
+                'errSave'   => esc_html__( 'Could not save note.', 'politeia-highlights' ),
             ]
         );
     }

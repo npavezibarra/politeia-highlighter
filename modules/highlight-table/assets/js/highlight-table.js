@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const tbody = table.querySelector('tbody');
   const colorsWrap = document.querySelector('#politeia-hl-color');
+  const editLabel = politeiaHLTable.editLabel || 'Edit';
+  const saveLabel = politeiaHLTable.saveLabel || 'Save';
+  const errSave = politeiaHLTable.errSave || 'Could not save note.';
 
   if (colorsWrap && Array.isArray(politeiaHLTable.colors)) {
     const allBtn = document.createElement('button');
@@ -53,14 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
           const created = new Date(row.created_at.replace(' ', 'T'));
           const dateStr = created.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
           const timeStr = created.toLocaleTimeString();
-          tr.innerHTML =
-            '<td class="hl-text">' +
-              '<a class="hl-post-title" href="' + escapeHtml(row.post_url) + '">' + escapeHtml(row.post_title) + '</a>' +
-              '<div class="hl-highlight">' + escapeHtml(row.anchor_exact) + '</div>' +
-              '<hr class="hl-date-separator" />' +
-              '<div class="hl-date" data-timestamp="' + Math.floor(created.getTime() / 1000) + '">' + dateStr + ' ' + timeStr + '</div>' +
-            '</td>' +
-            '<td class="hl-note">' + escapeHtml(row.note) + '</td>';
+            tr.innerHTML = `
+              <td class="hl-text">
+                <a class="hl-post-title" href="${escapeHtml(row.post_url)}">${escapeHtml(row.post_title)}</a>
+                <div class="hl-highlight">${escapeHtml(row.anchor_exact)}</div>
+                <hr class="hl-date-separator" />
+                <div class="hl-date" data-timestamp="${Math.floor(created.getTime() / 1000)}">${dateStr} ${timeStr}</div>
+              </td>
+              <td class="hl-note" data-id="${row.id}">
+                <div class="note-display">${escapeHtml(row.note)}</div>
+                <a href="#" class="hl-note-edit">${editLabel}</a>
+              </td>`;
           tbody.appendChild(tr);
         });
       });
@@ -75,6 +81,47 @@ document.addEventListener('DOMContentLoaded', function() {
       fetchHighlights(btn.dataset.color || '');
     });
   }
+
+  tbody.addEventListener('click', async function(e) {
+    const link = e.target.closest('.hl-note-edit');
+    if (!link) return;
+    e.preventDefault();
+    const cell = link.closest('.hl-note');
+    const id = cell ? cell.dataset.id : null;
+    if (!id) return;
+
+    if (!cell.dataset.editing) {
+      const text = cell.querySelector('.note-display')?.textContent || '';
+      const textarea = document.createElement('textarea');
+      textarea.className = 'hl-note-input';
+      textarea.value = text;
+      textarea.style.width = '100%';
+      cell.querySelector('.note-display').replaceWith(textarea);
+      link.textContent = saveLabel;
+      cell.dataset.editing = '1';
+      textarea.focus();
+    } else {
+      const textarea = cell.querySelector('.hl-note-input');
+      const note = textarea.value.slice(0, 1000);
+      try {
+        const url = new URL(politeiaHLTable.apiBase + '/' + id, window.location.origin);
+        const res = await fetch(url.toString(), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': politeiaHLTable.nonce },
+          body: JSON.stringify({ note })
+        });
+        if (!res.ok) throw new Error();
+        const div = document.createElement('div');
+        div.className = 'note-display';
+        div.textContent = note;
+        textarea.replaceWith(div);
+        link.textContent = editLabel;
+        delete cell.dataset.editing;
+      } catch (err) {
+        alert(errSave);
+      }
+    }
+  });
 
   table.querySelectorAll('th[data-sort]').forEach(function(th) {
     th.addEventListener('click', function() {
