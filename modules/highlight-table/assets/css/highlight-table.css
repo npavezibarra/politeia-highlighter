@@ -28,6 +28,18 @@
     margin: 4px 0;
 }
 
+/* Style for note column */
+.politeia-hl-table .hl-note {
+    font-size: 18px;
+}
+
+/* Thin separator above date/time */
+.politeia-hl-table .hl-date-separator {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 4px 0;
+}
+
 .hl-swatch.active {
     outline: 2px solid #000;
 }
