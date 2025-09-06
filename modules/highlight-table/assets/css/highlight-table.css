@@ -114,6 +114,10 @@
         display: none;
     }
 
+    .politeia-hl-table td:nth-child(2) {
+        width: 80%;
+    }
+
     .politeia-hl-table tbody tr {
         display: block;
         text-align: center;
@@ -134,5 +138,11 @@
     .politeia-hl-table th + th,
     .politeia-hl-table td + td {
         border-left: none;
+    }
+
+    .politeia-hl-table .hl-note .hl-note-edit {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
     }
 }
