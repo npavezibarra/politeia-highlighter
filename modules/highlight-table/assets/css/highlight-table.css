@@ -49,17 +49,19 @@
 /* Style for note column */
 .politeia-hl-table .hl-note {
     font-size: 18px;
-    display: flex;
-    align-items: flex-start;
+    position: relative;
+    padding-bottom: 24px;
 }
 
 .politeia-hl-table .hl-note .note-display,
 .politeia-hl-table .hl-note textarea {
-    flex: 1;
+    display: block;
 }
 
 .politeia-hl-table .hl-note .hl-note-edit {
-    margin-left: auto;
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
     font-size: 14px;
     cursor: pointer;
     color: #2196F3;
