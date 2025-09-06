@@ -82,7 +82,8 @@
 
     .politeia-hl-table tbody td {
         display: block;
-        width: 100%;
+        width: 80%;
+        margin: auto;
         text-align: center;
     }
 
