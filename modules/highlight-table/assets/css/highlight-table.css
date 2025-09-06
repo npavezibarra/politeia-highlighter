@@ -138,10 +138,11 @@
         justify-content: center;
     }
 
-    .politeia-hl-table th:nth-child(2) {
+    .politeia-hl-table th:first-child {
         display: none;
     }
 
+    .politeia-hl-table th:nth-child(2),
     .politeia-hl-table td:nth-child(2) {
         width: 80%;
     }
