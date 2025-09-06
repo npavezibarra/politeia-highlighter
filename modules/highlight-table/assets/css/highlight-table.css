@@ -3,6 +3,12 @@
     border-collapse: collapse;
 }
 
+.politeia-hl-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .politeia-hl-table th,
 .politeia-hl-table td {
     border: 1px solid #ccc;
@@ -20,12 +26,15 @@
 .politeia-hl-table .hl-text .hl-date {
     display: block;
     font-size: 13px;
+    opacity: 0.3;
+    font-weight: 500;
 }
 
 .politeia-hl-table .hl-text .hl-highlight {
     display: block;
     font-size: 18px;
     margin: 4px 0;
+    padding: 12px;
 }
 
 /* Style for note column */
@@ -46,4 +55,8 @@
 
 .hl-colors {
     padding-bottom: 10px;
+}
+
+.politeia-hl-filter .hl-colors {
+    margin-left: auto;
 }

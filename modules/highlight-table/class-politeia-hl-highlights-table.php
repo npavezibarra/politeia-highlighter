@@ -31,9 +31,10 @@ class Politeia_HL_Highlights_Table {
             'politeia-hl-table-js',
             'politeiaHLTable',
             [
-                'restUrl' => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/user-highlights' ) ) ),
-                'nonce'   => wp_create_nonce( 'wp_rest' ),
-                'colors'  => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+                'restUrl'  => esc_url_raw( wp_make_link_relative( rest_url( 'politeia/v1/user-highlights' ) ) ),
+                'nonce'    => wp_create_nonce( 'wp_rest' ),
+                'colors'   => [ '#ffe066','#ffda79','#c4f1be','#a0e7e5','#b4b4ff','#ffd6e0' ],
+                'allLabel' => esc_html__( 'All', 'politeia-highlights' ),
             ]
         );
     }
@@ -42,13 +43,12 @@ class Politeia_HL_Highlights_Table {
         if ( ! is_user_logged_in() ) return '';
 
         $html  = '<div class="politeia-hl-filter">';
-        $html .= '<label for="politeia-hl-color">' . esc_html__( 'Color', 'politeia-highlights' ) . '</label>';
+        $html .= '<div class="politeia-hl-title">' . esc_html__( 'My highlights', 'politeia-highlights' ) . '</div>';
         $html .= '<div id="politeia-hl-color" class="hl-colors" style="display:flex; gap:6px; flex-wrap:wrap;"></div>';
         $html .= '</div>';
 
         $html .= '<table class="politeia-hl-table">';
         $html .= '<thead><tr>';
-        $html .= '<th data-sort="index">' . esc_html__( 'Index', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Highlighted Text', 'politeia-highlights' ) . '</th>';
         $html .= '<th>' . esc_html__( 'Note', 'politeia-highlights' ) . '</th>';
         $html .= '</tr></thead>';
