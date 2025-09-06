@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const tbody = table.querySelector('tbody');
   const colorsWrap = document.querySelector('#politeia-hl-color');
   const editLabel = politeiaHLTable.editLabel || 'Edit';
+  const addLabel = politeiaHLTable.addLabel || 'Add Note';
   const saveLabel = politeiaHLTable.saveLabel || 'Save';
   const errSave = politeiaHLTable.errSave || 'Could not save note.';
 
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </td>
               <td class="hl-note" data-id="${row.id}">
                 <div class="note-display">${escapeHtml(row.note)}</div>
-                <a href="#" class="hl-note-edit">${editLabel}</a>
+                <a href="#" class="hl-note-edit">${(row.note && String(row.note).trim()) ? editLabel : addLabel}</a>
               </td>`;
           tbody.appendChild(tr);
         });
