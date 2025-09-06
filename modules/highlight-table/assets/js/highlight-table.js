@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (colorsWrap && Array.isArray(politeiaHLTable.colors)) {
     const allBtn = document.createElement('button');
     allBtn.type = 'button';
-    allBtn.textContent = 'All';
+    allBtn.textContent = politeiaHLTable.allLabel;
     allBtn.className = 'hl-swatch';
     Object.assign(allBtn.style, {
       height: '22px', borderRadius: '4px',
@@ -48,13 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(res => res.json())
       .then(data => {
         tbody.innerHTML = '';
-        data.forEach(function(row, idx) {
+        data.forEach(function(row) {
           const tr = document.createElement('tr');
           const created = new Date(row.created_at.replace(' ', 'T'));
           const dateStr = created.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
           const timeStr = created.toLocaleTimeString();
           tr.innerHTML =
-            '<td class="hl-index">' + (idx + 1) + '</td>' +
             '<td class="hl-text">' +
               '<a class="hl-post-title" href="' + escapeHtml(row.post_url) + '">' + escapeHtml(row.post_title) + '</a>' +
               '<div class="hl-highlight">' + escapeHtml(row.anchor_exact) + '</div>' +
@@ -101,9 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getVal(row, key) {
     const cell = row.querySelector('.hl-' + key);
-    if (key === 'index') {
-      return parseInt(cell.textContent, 10);
-    }
     if (key === 'date') {
       return parseInt(cell.dataset.timestamp, 10);
     }
