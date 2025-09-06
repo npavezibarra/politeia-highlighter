@@ -1,10 +1,10 @@
 .politeia-hl-table {
     width: 100%;
-    border-collapse: collapse;
+    border-spacing: 10px 0;
 }
 
 .politeia-hl-table tr {
-    border: 1px solid #000;
+    border: none;
 }
 
 .politeia-hl-filter {
@@ -26,14 +26,9 @@
     width: 30%;
 }
 
-.politeia-hl-table th + th,
-.politeia-hl-table td + td {
-    border-left: 1px solid #ccc;
-}
-
 .politeia-hl-table th {
     cursor: pointer;
-    background: #f5f5f5;
+    background: none;
 }
 
 
@@ -53,6 +48,12 @@
 }
 
 /* Style for note column */
+.politeia-hl-table .hl-text,
+.politeia-hl-table .hl-note {
+    border: 1px solid #000;
+    border-radius: 9px;
+}
+
 .politeia-hl-table .hl-note {
     font-size: 18px;
     position: relative;
@@ -135,9 +136,8 @@
         text-align: center;
     }
 
-    .politeia-hl-table th + th,
-    .politeia-hl-table td + td {
-        border-left: none;
+    .politeia-hl-table .hl-text {
+        margin-top: 22px;
     }
 
     .politeia-hl-table .hl-note .hl-note-edit {
