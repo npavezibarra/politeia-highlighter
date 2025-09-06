@@ -99,6 +99,12 @@ document.addEventListener('DOMContentLoaded', function() {
       cell.style.width = width + 'px';
       textarea.style.width = '100%';
       cell.querySelector('.note-display').replaceWith(textarea);
+      const resize = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      };
+      resize();
+      textarea.addEventListener('input', resize);
       link.textContent = saveLabel;
       cell.dataset.editing = '1';
       textarea.focus();
