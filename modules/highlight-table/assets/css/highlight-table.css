@@ -51,13 +51,18 @@
 .politeia-hl-table .hl-text,
 .politeia-hl-table .hl-note {
     border: 1px solid #000;
-    border-radius: 9px;
+}
+
+.politeia-hl-table .hl-text {
+    border-radius: 9px 9px 0 0;
 }
 
 .politeia-hl-table .hl-note {
     font-size: 18px;
     position: relative;
     padding-bottom: 24px;
+    border-top: none;
+    border-radius: 0 0 9px 9px;
 }
 
 .politeia-hl-table .hl-note .note-display,
@@ -111,6 +116,20 @@
 }
 
 @media (max-width: 767px) {
+    .politeia-hl-filter {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .politeia-hl-filter .politeia-hl-title {
+        text-align: center;
+    }
+
+    .politeia-hl-filter .hl-colors {
+        margin-left: 0;
+        justify-content: center;
+    }
+
     .politeia-hl-table th:nth-child(2) {
         display: none;
     }
