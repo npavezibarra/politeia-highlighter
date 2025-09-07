@@ -43,7 +43,9 @@
 }
 
 .politeia-hl-table .hl-text .hl-highlight {
-    display: block;
+    display: flex;
+    flex: 1;
+    align-items: center;
     font-size: 18px;
     margin: 4px 0;
     padding: 12px;
@@ -57,11 +59,18 @@
 
 .politeia-hl-table .hl-text {
     border-radius: 9px 0 0 9px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .politeia-hl-table .hl-note {
     border-left: none;
     border-radius: 0 9px 9px 0;
+}
+
+.politeia-hl-table .hl-text .hl-date-wrap {
+    margin-top: auto;
 }
 
 .politeia-hl-table .hl-note {

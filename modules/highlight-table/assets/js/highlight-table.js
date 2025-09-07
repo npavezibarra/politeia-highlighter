@@ -61,8 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
               <td class="hl-text">
                 <a class="hl-post-title" href="${escapeHtml(row.post_url)}">${escapeHtml(row.post_title)}</a>
                 <div class="hl-highlight">${escapeHtml(row.anchor_exact)}</div>
-                <hr class="hl-date-separator" />
-                <div class="hl-date" data-timestamp="${Math.floor(created.getTime() / 1000)}">${dateStr} ${timeStr}</div>
+                <div class="hl-date-wrap">
+                  <hr class="hl-date-separator" />
+                  <div class="hl-date" data-timestamp="${Math.floor(created.getTime() / 1000)}">${dateStr} ${timeStr}</div>
+                </div>
               </td>
               <td class="hl-note" data-id="${row.id}">
                 <div class="note-display">${escapeHtml(row.note)}</div>
