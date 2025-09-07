@@ -131,7 +131,6 @@
         border-top: none;
         border-left: 1px solid #000;
         border-radius: 0 0 9px 9px;
-        width: 80%;
     }
 
     .politeia-hl-filter {
@@ -159,9 +158,14 @@
 
     .politeia-hl-table tbody td {
         display: block;
-        width: 100%;
+        width: 80%;
         margin: auto;
         text-align: center;
+    }
+
+    .politeia-hl-table th:nth-child(2),
+    .politeia-hl-table td:nth-child(2) {
+        width: 80%;
     }
 
     .politeia-hl-table th,
