@@ -20,10 +20,12 @@
     text-align: left;
 }
 
-/* Keep the note column width consistent across filters */
-.politeia-hl-table th:nth-child(2),
-.politeia-hl-table td:nth-child(2) {
-    width: 30%;
+/* Keep the note column width consistent across filters on larger screens */
+@media (min-width: 767px) {
+    .politeia-hl-table th:nth-child(2),
+    .politeia-hl-table td:nth-child(2) {
+        width: 30%;
+    }
 }
 
 .politeia-hl-table th {
