@@ -76,6 +76,7 @@
 .politeia-hl-table .hl-note {
     font-size: 18px;
     position: relative;
+    padding: 20px;
     padding-bottom: 24px;
 }
 
@@ -174,6 +175,11 @@
         text-align: center;
     }
 
+    .politeia-hl-table .hl-text .hl-highlight {
+        justify-content: center;
+        text-align: center;
+    }
+
     .politeia-hl-table th:nth-child(2),
     .politeia-hl-table td:nth-child(2) {
         width: 80%;
@@ -192,5 +198,9 @@
         left: 50%;
         right: auto;
         transform: translateX(-50%);
+    }
+
+    .politeia-hl-table .hl-note textarea {
+        text-align: center;
     }
 }

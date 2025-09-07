@@ -40,6 +40,21 @@ document.addEventListener('DOMContentLoaded', function() {
     return div.innerHTML;
   }
 
+  function equalizeRowHeights() {
+    const isDesktop = window.innerWidth >= 767;
+    tbody.querySelectorAll('tr').forEach(function(row) {
+      const text = row.querySelector('.hl-text');
+      const note = row.querySelector('.hl-note');
+      if (!text || !note) return;
+      text.style.height = 'auto';
+      note.style.height = 'auto';
+      if (isDesktop) {
+        const h = Math.max(text.offsetHeight, note.offsetHeight);
+        text.style.height = note.style.height = h + 'px';
+      }
+    });
+  }
+
   function fetchHighlights(color) {
     const url = new URL(politeiaHLTable.restUrl, window.location.origin);
     if (color) {
@@ -72,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </td>`;
           tbody.appendChild(tr);
         });
+        equalizeRowHeights();
       });
   }
 
@@ -105,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const resize = () => {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
+        equalizeRowHeights();
       };
       resize();
       textarea.addEventListener('input', resize);
@@ -129,11 +146,14 @@ document.addEventListener('DOMContentLoaded', function() {
         link.textContent = editLabel;
         delete cell.dataset.editing;
         cell.style.width = '';
+        equalizeRowHeights();
       } catch (err) {
         alert(errSave);
       }
     }
   });
+
+  window.addEventListener('resize', equalizeRowHeights);
 
   table.querySelectorAll('th[data-sort]').forEach(function(th) {
     th.addEventListener('click', function() {
