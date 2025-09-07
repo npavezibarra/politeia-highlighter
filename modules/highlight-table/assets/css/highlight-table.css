@@ -1,6 +1,6 @@
 .politeia-hl-table {
     width: 100%;
-    border-spacing: 10px 0;
+    border-spacing: 0 30px;
 }
 
 .politeia-hl-table tr {
@@ -11,6 +11,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #000;
+    padding-bottom: 10px;
+}
+
+.politeia-hl-title {
+    font-weight: 900;
+    font-size: 28px;
 }
 
 .politeia-hl-table th,
@@ -20,15 +27,18 @@
     text-align: left;
 }
 
-/* Keep the note column width consistent across filters */
-.politeia-hl-table th:nth-child(2),
-.politeia-hl-table td:nth-child(2) {
-    width: 30%;
+/* Keep the note column width consistent across filters on larger screens */
+@media (min-width: 767px) {
+    .politeia-hl-table th:nth-child(2),
+    .politeia-hl-table td:nth-child(2) {
+        width: 30%;
+    }
 }
 
 .politeia-hl-table th {
     cursor: pointer;
     background: none;
+    padding: 0;
 }
 
 
@@ -41,7 +51,9 @@
 }
 
 .politeia-hl-table .hl-text .hl-highlight {
-    display: block;
+    display: flex;
+    flex: 1;
+    align-items: center;
     font-size: 18px;
     margin: 4px 0;
     padding: 12px;
@@ -51,13 +63,29 @@
 .politeia-hl-table .hl-text,
 .politeia-hl-table .hl-note {
     border: 1px solid #000;
-    border-radius: 9px;
+}
+
+.politeia-hl-table .hl-text {
+    border-radius: 9px 0 0 9px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+}
+
+.politeia-hl-table .hl-note {
+    border-left: none;
+    border-radius: 0 9px 9px 0;
+}
+
+.politeia-hl-table .hl-text .hl-date-wrap {
+    margin-top: auto;
 }
 
 .politeia-hl-table .hl-note {
     font-size: 18px;
     position: relative;
-    padding-bottom: 24px;
+    padding: 20px;
 }
 
 .politeia-hl-table .hl-note .note-display,
@@ -111,12 +139,40 @@
 }
 
 @media (max-width: 767px) {
-    .politeia-hl-table th:nth-child(2) {
-        display: none;
+    .politeia-hl-table {
+        border-spacing: 10px 0;
     }
 
-    .politeia-hl-table td:nth-child(2) {
+    .politeia-hl-table .hl-text {
+        border-radius: 9px 9px 0 0;
+    }
+
+    .politeia-hl-table .hl-note {
+        border-top: none;
+        border-left: 1px solid #000;
+        border-radius: 0 0 9px 9px;
+    }
+
+    .politeia-hl-filter {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        border-bottom: none;
         width: 80%;
+    }
+
+    .politeia-hl-filter .politeia-hl-title {
+        text-align: center;
+    }
+
+    .politeia-hl-filter .hl-colors {
+        margin-left: 0;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .politeia-hl-table th {
+        display: none;
     }
 
     .politeia-hl-table tbody tr {
@@ -129,6 +185,16 @@
         width: 80%;
         margin: auto;
         text-align: center;
+    }
+
+    .politeia-hl-table .hl-text .hl-highlight {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .politeia-hl-table th:nth-child(2),
+    .politeia-hl-table td:nth-child(2) {
+        width: 80%;
     }
 
     .politeia-hl-table th,
@@ -144,5 +210,9 @@
         left: 50%;
         right: auto;
         transform: translateX(-50%);
+    }
+
+    .politeia-hl-table .hl-note textarea {
+        text-align: center;
     }
 }
