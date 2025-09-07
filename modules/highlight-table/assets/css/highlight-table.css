@@ -11,6 +11,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #000;
+}
+
+.politeia-hl-title {
+    font-weight: 900;
+    font-size: 28px;
 }
 
 .politeia-hl-table th,
